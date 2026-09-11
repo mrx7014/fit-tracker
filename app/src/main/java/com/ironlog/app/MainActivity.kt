@@ -60,6 +60,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 private data class Lift(val id: Long, val exercise: String, val date: String, val weight: Float, val reps: Int)
+private data class Achievement(val title: String, val description: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val unlocked: Boolean)
 private enum class UnitMode { KG, LB }
 private enum class ThemeMode { SYSTEM, LIGHT, DARK }
 private const val PREFS = "ironlog"
@@ -104,11 +105,11 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     val streak get() = run { var n = 0; val cal = Calendar.getInstance(); while (uniqueDays.contains(fmt.format(cal.time))) { n++; cal.add(Calendar.DAY_OF_YEAR, -1) }; n }
     val bestWeight get() = lifts.maxOfOrNull { it.weight } ?: 0f
     val achievements get() = listOf(
-        Triple("البداية", "سجّل أول تمرين", Icons.Default.Flag, lifts.isNotEmpty()),
-        Triple("أسبوع كامل", "حافظت على streak لمدة 7 أيام", Icons.Default.LocalFireDepartment, streak >= 7),
-        Triple("عشر جلسات", "أكملت 10 تسجيلات", Icons.Default.EmojiEvents, lifts.size >= 10),
-        Triple("طن من الجهد", "تخطيت 1000 كجم × تكرار", Icons.Default.FitnessCenter, totalVolume >= 1000f),
-        Triple("متعدد المواهب", "جرّبت 5 تمارين مختلفة", Icons.Default.Stars, lifts.distinctBy { it.exercise }.size >= 5)
+        Achievement("البداية", "سجّل أول تمرين", Icons.Default.Flag, lifts.isNotEmpty()),
+        Achievement("أسبوع كامل", "حافظت على streak لمدة 7 أيام", Icons.Default.LocalFireDepartment, streak >= 7),
+        Achievement("عشر جلسات", "أكملت 10 تسجيلات", Icons.Default.EmojiEvents, lifts.size >= 10),
+        Achievement("طن من الجهد", "تخطيت 1000 كجم × تكرار", Icons.Default.FitnessCenter, totalVolume >= 1000f),
+        Achievement("متعدد المواهب", "جرّبت 5 تمارين مختلفة", Icons.Default.Stars, lifts.distinctBy { it.exercise }.size >= 5)
     )
     companion object { val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US) }
 }
