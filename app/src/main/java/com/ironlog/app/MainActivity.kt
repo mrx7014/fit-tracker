@@ -192,9 +192,63 @@ class MainActivity : ComponentActivity() {
 
 @Composable private fun LiftRow(lift: Lift, vm: LiftViewModel) { var visible by remember { mutableStateOf(false) }; LaunchedEffect(Unit) { visible = true }; AnimatedVisibility(visible, enter = fadeIn() + slideInVertically { it / 2 }) { Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) { Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.FitnessCenter, null, Modifier.size(34.dp), tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(lift.exercise, fontWeight = FontWeight.Bold); Text("${lift.date} • ${lift.reps} تكرار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Text("${"%.1f".format(vm.displayWeight(lift.weight))} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}", fontWeight = FontWeight.Bold); IconButton(onClick = { vm.remove(lift.id) }) { Icon(Icons.Default.DeleteOutline, "حذف", tint = MaterialTheme.colorScheme.error) } } } } }
 
-@Composable private fun UpdateCard() { val uriHandler = LocalUriHandler.current; Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) { Column(Modifier.padding(18.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text("التحديثات", fontWeight = FontWeight.Bold); Text("الإصدار الحالي 1.0.0", style = MaterialTheme.typography.bodySmall) }; TextButton(onClick = { uriHandler.openUri("https://github.com/mrx7014/ironlog-android/releases/latest") }) { Text("فحص") } }; Spacer(Modifier.height(8.dp)); Text("آخر changelog: إنجازات، إحصائيات، تذكيرات، وثيمات جديدة.", style = MaterialTheme.typography.bodySmall); TextButton(onClick = { uriHandler.openUri("https://github.com/mrx7014/ironlog-android/releases") }) { Text("فتح صفحة الإصدارات") } } }
+@Composable private fun UpdateCard() {
+    val uriHandler = LocalUriHandler.current
+    Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Column(Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) { Text("التحديثات", fontWeight = FontWeight.Bold); Text("الإصدار الحالي 1.0.0", style = MaterialTheme.typography.bodySmall) }
+                TextButton(onClick = { uriHandler.openUri("https://github.com/mrx7014/ironlog-android/releases/latest") }) { Text("فحص") }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("آخر changelog: إنجازات، إحصائيات، تذكيرات، وثيمات جديدة.", style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = { uriHandler.openUri("https://github.com/mrx7014/ironlog-android/releases") }) { Text("فتح صفحة الإصدارات") }
+        }
+    }
+}
 
-@Composable private fun Settings(vm: LiftViewModel, export: () -> Unit, restore: () -> Unit, about: () -> Unit, reminder: (Boolean) -> Unit) { LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) { item { Text("الإعدادات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text("تحكم في تجربتك وبياناتك", color = MaterialTheme.colorScheme.onSurfaceVariant) }; item { Text("المظهر", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }; item { Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(18.dp)) { SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) { listOf(ThemeMode.SYSTEM to "النظام", ThemeMode.LIGHT to "فاتح", ThemeMode.DARK to "داكن").forEachIndexed { i, pair -> SegmentedButton(vm.themeMode == pair.first, { vm.updateTheme(pair.first) }, shape = SegmentedButtonDefaults.itemShape(i, 3)) { Text(pair.second) } } }; Spacer(Modifier.height(14.dp)); SettingsCard(Icons.Default.Palette, "Dynamic Color", "استخدم ألوان النظام أو اختر لونًا مخصصًا") { Switch(vm.dynamicColors, { vm.updateDynamic(it) }) }; Spacer(Modifier.height(10.dp)); Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { listOf(Color(0xFF0B5D46), Color(0xFF6750A4), Color(0xFF9C4146), Color(0xFF006874)).forEachIndexed { i, color -> Box(Modifier.size(34.dp).clip(RoundedCornerShape(17.dp)).background(color).then(if (vm.accent == i) Modifier.background(MaterialTheme.colorScheme.onSurface.copy(alpha = .25f)) else Modifier).clickable { vm.updateAccent(i) }, contentAlignment = Alignment.Center) { if (vm.accent == i) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)) } } } } } }; item { SettingsCard(Icons.Default.Notifications, "تذكير يومي", "تنبيه الساعة 8 مساءً للحفاظ على الاستريك") { Switch(vm.reminders, reminder) } }; item { Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(18.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Straighten, null); Spacer(Modifier.width(12.dp)); Column { Text("وحدة الوزن", fontWeight = FontWeight.Bold); Text("اختر الوحدة المفضلة", style = MaterialTheme.typography.bodySmall) } }; Spacer(Modifier.height(12.dp)); SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) { SegmentedButton(vm.unit == UnitMode.KG, { vm.updateUnit(UnitMode.KG) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("كيلو kg") }; SegmentedButton(vm.unit == UnitMode.LB, { vm.updateUnit(UnitMode.LB) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("باوند lb") } } } } }; item { UpdateCard() }; item { Text("البيانات", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }; item { SettingsCard(Icons.Default.Upload, "تصدير نسخة احتياطية", "ملف JSON قابل للحفظ والمشاركة") { TextButton(onClick = export) { Text("تصدير") } } }; item { SettingsCard(Icons.Default.Download, "استيراد نسخة احتياطية", "استرجاع تمارينك من ملف JSON") { TextButton(onClick = restore) { Text("استيراد") } } }; item { SettingsCard(Icons.Default.Info, "عن IronLog", "المطور، الإصدار، ورابط GitHub") { TextButton(onClick = about) { Text("فتح") } } } } }
+@Composable private fun Settings(vm: LiftViewModel, export: () -> Unit, restore: () -> Unit, about: () -> Unit, reminder: (Boolean) -> Unit) {
+    LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item { Text("الإعدادات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text("تحكم في تجربتك وبياناتك", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("المظهر", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+        item {
+            Card(shape = RoundedCornerShape(22.dp)) {
+                Column(Modifier.padding(18.dp)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        listOf(ThemeMode.SYSTEM to "النظام", ThemeMode.LIGHT to "فاتح", ThemeMode.DARK to "داكن").forEachIndexed { i, pair ->
+                            SegmentedButton(vm.themeMode == pair.first, { vm.updateTheme(pair.first) }, shape = SegmentedButtonDefaults.itemShape(i, 3)) { Text(pair.second) }
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    SettingsCard(Icons.Default.Palette, "Dynamic Color", "استخدم ألوان النظام أو اختر لونًا مخصصًا") { Switch(vm.dynamicColors, { vm.updateDynamic(it) }) }
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listOf(Color(0xFF0B5D46), Color(0xFF6750A4), Color(0xFF9C4146), Color(0xFF006874)).forEachIndexed { i, color ->
+                            Box(Modifier.size(34.dp).clip(RoundedCornerShape(17.dp)).background(color).clickable { vm.updateAccent(i) }, contentAlignment = Alignment.Center) { if (vm.accent == i) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)) }
+                        }
+                    }
+                }
+            }
+        }
+        item { SettingsCard(Icons.Default.Notifications, "تذكير يومي", "تنبيه الساعة 8 مساءً للحفاظ على الاستريك") { Switch(vm.reminders, reminder) } }
+        item {
+            Card(shape = RoundedCornerShape(22.dp)) {
+                Column(Modifier.padding(18.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Straighten, null); Spacer(Modifier.width(12.dp)); Column { Text("وحدة الوزن", fontWeight = FontWeight.Bold); Text("اختر الوحدة المفضلة", style = MaterialTheme.typography.bodySmall) } }
+                    Spacer(Modifier.height(12.dp))
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) { SegmentedButton(vm.unit == UnitMode.KG, { vm.updateUnit(UnitMode.KG) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("كيلو kg") }; SegmentedButton(vm.unit == UnitMode.LB, { vm.updateUnit(UnitMode.LB) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("باوند lb") } }
+                }
+            }
+        }
+        item { UpdateCard() }
+        item { Text("البيانات", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+        item { SettingsCard(Icons.Default.Upload, "تصدير نسخة احتياطية", "ملف JSON قابل للحفظ والمشاركة") { TextButton(onClick = export) { Text("تصدير") } } }
+        item { SettingsCard(Icons.Default.Download, "استيراد نسخة احتياطية", "استرجاع تمارينك من ملف JSON") { TextButton(onClick = restore) { Text("استيراد") } } }
+        item { SettingsCard(Icons.Default.Info, "عن IronLog", "المطور، الإصدار، ورابط GitHub") { TextButton(onClick = about) { Text("فتح") } } }
+    }
+}
 
 @Composable private fun SettingsCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, action: @Composable () -> Unit) { Card(shape = RoundedCornerShape(22.dp)) { Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(title, fontWeight = FontWeight.Bold); Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; action() } } }
 
