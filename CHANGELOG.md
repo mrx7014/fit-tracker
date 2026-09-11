@@ -1,37 +1,27 @@
-# IronLog 1.0.0
+# IronLog
 
-## English
+## English — App Features
 
-### Highlights
+IronLog is a private strength-training companion for recording workouts, tracking progressive overload, and building consistent training habits.
 
-- Achievement badges for workouts and streak milestones.
-- Advanced statistics with a weight-progress chart.
-- Optional daily workout reminders.
-- Manual theme modes: System, Light, and Dark.
-- Dynamic Color support with custom accent colors.
-- JSON backup and restore.
-- Material 3 Expressive onboarding and improved typography.
-- GitHub Releases update center with APK download and Android installer handoff.
-- Official version: 1.0.0.
+The app includes quick workout logging for exercise name, date, weight, and repetitions; daily, weekly, and monthly progress summaries; streak tracking; advanced statistics with weight charts; personal best tracking; achievement badges; optional daily reminders; JSON backup and restore; manual System, Light, and Dark themes; Dynamic Color and custom accent colors; Material 3 Expressive UI; Arabic and English support; onboarding; an About screen; and GitHub-based update delivery.
 
-### Update
+The current official release is **1.0.0**. Detailed release-specific changes will start from **2.0.0**, after the complete visual redesign.
 
-Open the Updates section in the app to download the latest APK from GitHub Releases. Android may ask you to allow installation from this source.
+## العربية — مميزات التطبيق
 
-## العربية
+IronLog هو مساعد شخصي وخصوصي لتسجيل تمارين المقاومة، متابعة زيادة الأوزان، وبناء عادة تمرين مستمرة.
 
-### أبرز المميزات
+يحتوي التطبيق على تسجيل سريع لاسم التمرين واليوم والوزن والتكرارات، وملخصات يومية وأسبوعية وشهرية، ومتابعة الـ streak، وإحصائيات متقدمة مع رسوم بيانية للأوزان، ومتابعة أفضل الأوزان، ونظام Badges للإنجازات، وتذكيرات يومية اختيارية، ونسخ احتياطي واسترجاع بصيغة JSON، وأوضاع مظهر يدوية للنظام والفاتح والداكن، وDynamic Color مع ألوان رئيسية مخصصة، وواجهة Material 3 Expressive، ودعم العربية والإنجليزية، وواجهة تعريفية، وصفحة عن التطبيق، وتوصيل تحديثات من خلال GitHub.
 
-- نظام إنجازات للتمارين ومراحل الـ streak.
-- إحصائيات متقدمة مع رسم بياني لتطور الأوزان.
-- تذكير يومي اختياري لتسجيل التمرين.
-- أوضاع مظهر يدوية: النظام، الفاتح، والداكن.
-- دعم Dynamic Color مع ألوان رئيسية مخصصة.
-- نسخ احتياطي واسترجاع بصيغة JSON.
-- واجهة Material 3 Expressive مع onboarding وخطوط محسنة.
-- مركز تحديثات مرتبط بـ GitHub Releases لتنزيل APK وفتح مثبت Android.
-- الإصدار الرسمي: 1.0.0.
+الإصدار الرسمي الحالي هو **1.0.0**. وسيبدأ تسجيل التغييرات الخاصة بالإصدارات من **2.0.0** بعد الانتهاء من إعادة التصميم البصرية الكاملة.
 
-### التحديث
+## Release Change Log
 
-افتح قسم التحديثات داخل التطبيق لتنزيل آخر APK من GitHub Releases. قد يطلب Android السماح بالتثبيت من هذا المصدر.
+### 2.0.0 — Planned
+
+The complete modern visual redesign will be documented here in English first, followed by Arabic details.
+
+### 2.0.0 — مخطط
+
+سيتم توثيق إعادة التصميم البصرية الكاملة هنا باللغة الإنجليزية أولًا، ثم التفاصيل العربية.
