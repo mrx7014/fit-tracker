@@ -127,14 +127,48 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable private fun IronLogApp(vm: LiftViewModel) {
-    val context = LocalContext.current; var page by remember { mutableIntStateOf(0) }; var showAdd by remember { mutableStateOf(false) }; var intro by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(ONBOARDING, false)) }
+    val context = LocalContext.current
+    var page by remember { mutableIntStateOf(0) }
+    var showAdd by remember { mutableStateOf(false) }
+    var intro by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(ONBOARDING, false)) }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? -> uri?.let { context.contentResolver.openOutputStream(it)?.use { out -> out.write(JsonBackup.encode(vm.lifts).toByteArray()) } } }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { reader -> vm.restore(JsonBackup.decode(reader.readText())) } } }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        if (intro) Onboarding { context.getSharedPreferences(PREFS, 0).edit().putBoolean(ONBOARDING, true).apply(); intro = false }
-        else { BackHandler(enabled = page != 0) { page = if (page == 4) 3 else 0 }; Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = { NavigationBar { NavigationBarItem(page == 0, { page = 0 }, icon = { Icon(Icons.Default.Insights, null) }, label = { Text("ملخص") }); NavigationBarItem(page == 1, { page = 1 }, icon = { Icon(Icons.Default.History, null) }, label = { Text("السجل") }); NavigationBarItem(page == 2, { page = 2 }, icon = { Icon(Icons.Default.BarChart, null) }, label = { Text("إحصائيات") }); NavigationBarItem(page == 3, { page = 3 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("الإعدادات") }) } }, floatingActionButton = { if (page == 0) FloatingActionButton(onClick = { showAdd = true }, modifier = Modifier.padding(bottom = 8.dp), containerColor = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.Add, "إضافة") } }, floatingActionButtonPosition = FabPosition.End) { pad -> Column(Modifier.padding(pad).fillMaxSize()) { Header(); AnimatedContent(page, label = "navigation") { when (it) { 0 -> Summary(vm); 1 -> History(vm); 2 -> StatsScreen(vm); 3 -> Settings(vm, { export.launch("ironlog-backup.json") }, { restore.launch(arrayOf("application/json")) }, { page = 4 }, { enabled -> if (enabled && Build.VERSION.SDK_INT >= 33) notificationPermission.launch("android.permission.POST_NOTIFICATIONS"); vm.updateReminders(enabled) }); else -> AboutScreen() } } } } }
+        if (intro) {
+            Onboarding { context.getSharedPreferences(PREFS, 0).edit().putBoolean(ONBOARDING, true).apply(); intro = false }
+        } else {
+            BackHandler(enabled = page != 0) { page = if (page == 4) 3 else 0 }
+            Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
+                bottomBar = { AppNavigation(page) { page = it } },
+                floatingActionButton = { if (page == 0) FloatingActionButton(onClick = { showAdd = true }, modifier = Modifier.padding(bottom = 8.dp), containerColor = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.Add, "إضافة") } },
+                floatingActionButtonPosition = FabPosition.End
+            ) { pad ->
+                Column(Modifier.padding(pad).fillMaxSize()) {
+                    Header()
+                    AnimatedContent(page, label = "navigation") { current ->
+                        when (current) {
+                            0 -> Summary(vm)
+                            1 -> History(vm)
+                            2 -> StatsScreen(vm)
+                            3 -> Settings(vm, { export.launch("ironlog-backup.json") }, { restore.launch(arrayOf("application/json")) }, { page = 4 }, { enabled -> if (enabled && Build.VERSION.SDK_INT >= 33) notificationPermission.launch("android.permission.POST_NOTIFICATIONS"); vm.updateReminders(enabled) })
+                            else -> AboutScreen()
+                        }
+                    }
+                }
+            }
+        }
         if (showAdd) AddDialog({ showAdd = false }) { e, d, w, r -> vm.add(e, d, w, r); showAdd = false }
+    }
+}
+
+@Composable private fun AppNavigation(page: Int, onPage: (Int) -> Unit) {
+    NavigationBar {
+        NavigationBarItem(page == 0, { onPage(0) }, icon = { Icon(Icons.Default.Insights, null) }, label = { Text("ملخص") })
+        NavigationBarItem(page == 1, { onPage(1) }, icon = { Icon(Icons.Default.History, null) }, label = { Text("السجل") })
+        NavigationBarItem(page == 2, { onPage(2) }, icon = { Icon(Icons.Default.BarChart, null) }, label = { Text("إحصائيات") })
+        NavigationBarItem(page == 3, { onPage(3) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("الإعدادات") })
     }
 }
 
