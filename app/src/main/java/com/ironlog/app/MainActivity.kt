@@ -4,12 +4,14 @@ import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Build
+import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,6 +77,8 @@ private const val REMINDER_CHANNEL = "ironlog_reminders"
 private const val THEME = "theme_mode"
 private const val DYNAMIC = "dynamic_color"
 private const val ACCENT = "accent_color"
+private const val APK_URL = "https://github.com/mrx7014/ironlog-android/releases/latest/download/app-debug.apk"
+private const val APK_FILE = "ironlog-update.apk"
 
 private object JsonBackup {
     fun encode(lifts: List<Lift>): String = "{\"version\":1,\"app\":\"IronLog\",\"lifts\":[" + lifts.joinToString(",") { "{\"id\":${it.id},\"exercise\":\"${it.exercise.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"date\":\"${it.date}\",\"weight\":${it.weight},\"reps\":${it.reps}}" } + "]}"
@@ -121,6 +126,10 @@ private object ReminderManager {
 }
 
 class ReminderReceiver : BroadcastReceiver() { override fun onReceive(context: Context, intent: Intent?) { val notification = android.app.Notification.Builder(context, REMINDER_CHANNEL).setSmallIcon(android.R.drawable.ic_menu_edit).setContentTitle("IronLog").setContentText("حافظ على الاستريك وسجّل تمرينك اليوم").setAutoCancel(true).build(); (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(77, notification) } }
+
+private object UpdateManager { fun download(context: Context) { val request = DownloadManager.Request(Uri.parse(APK_URL)).setTitle("IronLog 1.0.0").setDescription("جاري تنزيل تحديث IronLog").setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED).setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APK_FILE).setMimeType("application/vnd.android.package-archive"); (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request) }; fun install(context: Context) { val file = java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), APK_FILE); if (!file.exists()) return; val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file); val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION); runCatching { context.startActivity(intent) }.onFailure { if (Build.VERSION.SDK_INT >= 26) context.startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } }
+
+class UpdateReceiver : BroadcastReceiver() { override fun onReceive(context: Context, intent: Intent?) { if (intent?.action == DownloadManager.ACTION_DOWNLOAD_COMPLETE) UpdateManager.install(context) } }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(state: Bundle?) { super.onCreate(state); setContent { val vm: LiftViewModel = viewModel(factory = object : ViewModelProvider.Factory { override fun <T : ViewModel> create(c: Class<T>) = LiftViewModel(applicationContext) as T }); IronLogTheme(vm) { IronLogApp(vm) } } }
@@ -193,6 +202,7 @@ class MainActivity : ComponentActivity() {
 @Composable private fun LiftRow(lift: Lift, vm: LiftViewModel) { var visible by remember { mutableStateOf(false) }; LaunchedEffect(Unit) { visible = true }; AnimatedVisibility(visible, enter = fadeIn() + slideInVertically { it / 2 }) { Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) { Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.FitnessCenter, null, Modifier.size(34.dp), tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(lift.exercise, fontWeight = FontWeight.Bold); Text("${lift.date} • ${lift.reps} تكرار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Text("${"%.1f".format(vm.displayWeight(lift.weight))} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}", fontWeight = FontWeight.Bold); IconButton(onClick = { vm.remove(lift.id) }) { Icon(Icons.Default.DeleteOutline, "حذف", tint = MaterialTheme.colorScheme.error) } } } } }
 
 @Composable private fun UpdateCard() {
+    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Column(Modifier.padding(18.dp)) {
@@ -200,7 +210,7 @@ class MainActivity : ComponentActivity() {
                 Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) { Text("التحديثات", fontWeight = FontWeight.Bold); Text("الإصدار الحالي 1.0.0", style = MaterialTheme.typography.bodySmall) }
-                TextButton(onClick = { uriHandler.openUri("https://github.com/mrx7014/ironlog-android/releases/latest") }) { Text("فحص") }
+                TextButton(onClick = { UpdateManager.download(context) }) { Text("تنزيل وتثبيت") }
             }
             Spacer(Modifier.height(8.dp))
             Text("آخر changelog: إنجازات، إحصائيات، تذكيرات، وثيمات جديدة.", style = MaterialTheme.typography.bodySmall)
