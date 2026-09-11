@@ -1,15 +1,37 @@
 # IronLog 1.0.0
 
-## الجديد
+## English
 
-- نظام إنجازات Badges للتمارين والاستريك.
-- شاشة إحصائيات متقدمة ورسم بياني لتطور الأوزان.
+### Highlights
+
+- Achievement badges for workouts and streak milestones.
+- Advanced statistics with a weight-progress chart.
+- Optional daily workout reminders.
+- Manual theme modes: System, Light, and Dark.
+- Dynamic Color support with custom accent colors.
+- JSON backup and restore.
+- Material 3 Expressive onboarding and improved typography.
+- GitHub Releases update center with APK download and Android installer handoff.
+- Official version: 1.0.0.
+
+### Update
+
+Open the Updates section in the app to download the latest APK from GitHub Releases. Android may ask you to allow installation from this source.
+
+## العربية
+
+### أبرز المميزات
+
+- نظام إنجازات للتمارين ومراحل الـ streak.
+- إحصائيات متقدمة مع رسم بياني لتطور الأوزان.
 - تذكير يومي اختياري لتسجيل التمرين.
-- Dark Mode يدوي: النظام أو فاتح أو داكن.
-- Dynamic Color وألوان رئيسية مخصصة.
-- Backup وRestore بصيغة JSON.
-- Onboarding وشعار IronLog وخطوط محسنة.
+- أوضاع مظهر يدوية: النظام، الفاتح، والداكن.
+- دعم Dynamic Color مع ألوان رئيسية مخصصة.
+- نسخ احتياطي واسترجاع بصيغة JSON.
+- واجهة Material 3 Expressive مع onboarding وخطوط محسنة.
+- مركز تحديثات مرتبط بـ GitHub Releases لتنزيل APK وفتح مثبت Android.
+- الإصدار الرسمي: 1.0.0.
 
-## التحديث
+### التحديث
 
-للحصول على آخر نسخة، افتح صفحة Releases من داخل التطبيق أو من مستودع GitHub.
+افتح قسم التحديثات داخل التطبيق لتنزيل آخر APK من GitHub Releases. قد يطلب Android السماح بالتثبيت من هذا المصدر.
