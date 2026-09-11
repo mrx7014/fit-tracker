@@ -48,6 +48,8 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     val totalVolume get() = lifts.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
     val uniqueDays get() = lifts.map { it.date }.distinct()
     val streak get() = run { var n = 0; val cal = Calendar.getInstance(); while (uniqueDays.contains(fmt.format(cal.time))) { n++; cal.add(Calendar.DAY_OF_YEAR, -1) }; n }
+    fun inLastDays(days: Int): List<Lift> { val start = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -(days - 1)) }.timeInMillis; return lifts.filter { runCatching { fmt.parse(it.date)?.time ?: 0L }.getOrDefault(0L) >= start } }
+    fun bestWeight(): Float = lifts.maxOfOrNull { it.weight } ?: 0f
     companion object { val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US) }
 }
 
@@ -70,14 +72,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable private fun Summary(vm: LiftViewModel) {
+    var range by remember { mutableIntStateOf(7) }; val scoped = vm.inLastDays(range); val scopedVolume = scoped.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
     LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Text("صباح القوة", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text("جاهز تكسر رقمك؟", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        item { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { StatCard("${vm.streak}", "يوم streak", Icons.Default.CalendarMonth, MaterialTheme.colorScheme.primaryContainer); StatCard("${vm.lifts.size}", "تسجيل", Icons.Default.BarChart, MaterialTheme.colorScheme.tertiaryContainer) } }
-        item { Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(24.dp)) { Column(Modifier.padding(20.dp)) { Text("حجم التدريب", fontWeight = FontWeight.Bold); Text("${"%.1f".format(vm.totalVolume)} كجم × تكرار", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(12.dp)); MiniChart(vm.lifts) } } }
+        item { SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) { SegmentedButton(range == 7, { range = 7 }, shape = SegmentedButtonDefaults.itemShape(0, 3)) { Text("أسبوع") }; SegmentedButton(range == 30, { range = 30 }, shape = SegmentedButtonDefaults.itemShape(1, 3)) { Text("شهر") }; SegmentedButton(range == 365, { range = 365 }, shape = SegmentedButtonDefaults.itemShape(2, 3)) { Text("سنة") } } }
+        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { StatCard("${vm.streak}", "يوم streak", Icons.Default.CalendarMonth, MaterialTheme.colorScheme.primaryContainer); StatCard("${scoped.size}", "تسجيل الفترة", Icons.Default.BarChart, MaterialTheme.colorScheme.tertiaryContainer) } }
+        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { SmallMetric("${"%.1f".format(scopedVolume)}", "حجم الفترة"); SmallMetric("${vm.bestWeight()} kg", "أعلى وزن") } }
+        item { Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(24.dp)) { Column(Modifier.padding(20.dp)) { Text("نشاط آخر 7 أيام", fontWeight = FontWeight.Bold); Text("${"%.1f".format(vm.totalVolume)} كجم × تكرار إجمالي", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(12.dp)); MiniChart(vm.lifts) } } }
         item { Text("آخر التمرينات", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
         if (vm.lifts.isEmpty()) item { EmptyState() } else items(vm.lifts.take(4), key = { it.id }) { LiftRow(it, {}) }
     }
 }
+
+@Composable private fun SmallMetric(value: String, label: String) { Card(Modifier.width(160.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(18.dp)) { Column(Modifier.padding(14.dp)) { Text(value, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary); Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
 
 @Composable private fun StatCard(value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color) { Card(Modifier.width(160.dp), colors = CardDefaults.cardColors(containerColor = color), shape = RoundedCornerShape(24.dp)) { Column(Modifier.padding(16.dp)) { Icon(icon, null, Modifier.size(24.dp)); Spacer(Modifier.height(10.dp)); Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text(label, style = MaterialTheme.typography.labelLarge) } } }
 
