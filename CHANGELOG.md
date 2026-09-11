@@ -1,27 +1,29 @@
-# IronLog
+# IronLog 2.0.0
 
-## English — App Features
+## English
 
-IronLog is a private strength-training companion for recording workouts, tracking progressive overload, and building consistent training habits.
+### Complete visual redesign
 
-The app includes quick workout logging for exercise name, date, weight, and repetitions; daily, weekly, and monthly progress summaries; streak tracking; advanced statistics with weight charts; personal best tracking; achievement badges; optional daily reminders; JSON backup and restore; manual System, Light, and Dark themes; Dynamic Color and custom accent colors; Material 3 Expressive UI; Arabic and English support; onboarding; an About screen; and GitHub-based update delivery.
+IronLog 2.0.0 introduces a complete modern fitness-dashboard redesign focused on clarity, motivation, and faster workout logging.
 
-The current official release is **1.0.0**. Detailed release-specific changes will start from **2.0.0**, after the complete visual redesign.
+The new experience includes a bold IronLog identity, a strength-focused hero dashboard, a dedicated streak spotlight, clearer metric cards, improved training-volume progress, redesigned workout rows, stronger spacing and hierarchy, refined rounded surfaces, a cleaner bottom navigation, a better floating add action, and a more consistent dark/light visual system.
 
-## العربية — مميزات التطبيق
+All existing features remain available: workout logging, progress summaries, streak tracking, advanced charts, achievements, reminders, JSON backup and restore, manual themes, Dynamic Color, custom accents, onboarding, About, and GitHub OTA updates.
 
-IronLog هو مساعد شخصي وخصوصي لتسجيل تمارين المقاومة، متابعة زيادة الأوزان، وبناء عادة تمرين مستمرة.
+### Release
 
-يحتوي التطبيق على تسجيل سريع لاسم التمرين واليوم والوزن والتكرارات، وملخصات يومية وأسبوعية وشهرية، ومتابعة الـ streak، وإحصائيات متقدمة مع رسوم بيانية للأوزان، ومتابعة أفضل الأوزان، ونظام Badges للإنجازات، وتذكيرات يومية اختيارية، ونسخ احتياطي واسترجاع بصيغة JSON، وأوضاع مظهر يدوية للنظام والفاتح والداكن، وDynamic Color مع ألوان رئيسية مخصصة، وواجهة Material 3 Expressive، ودعم العربية والإنجليزية، وواجهة تعريفية، وصفحة عن التطبيق، وتوصيل تحديثات من خلال GitHub.
+This is the official **2.0.0** release. The APK is built and published through GitHub Actions and GitHub Releases.
 
-الإصدار الرسمي الحالي هو **1.0.0**. وسيبدأ تسجيل التغييرات الخاصة بالإصدارات من **2.0.0** بعد الانتهاء من إعادة التصميم البصرية الكاملة.
+## العربية
 
-## Release Change Log
+### إعادة تصميم كاملة للواجهة
 
-### 2.0.0 — Planned
+يقدم IronLog 2.0.0 إعادة تصميم كاملة وعصرية مستوحاة من تطبيقات اللياقة الحديثة، مع التركيز على الوضوح والتحفيز وسرعة تسجيل التمرين.
 
-The complete modern visual redesign will be documented here in English first, followed by Arabic details.
+تشمل النسخة هوية بصرية أقوى لـ IronLog، ولوحة رئيسية تركّز على القوة، وإبرازًا واضحًا للـ streak، وبطاقات أرقام محسنة، ومتابعة أوضح لحجم التدريب، وبطاقات جديدة للتمارين، ومساحات وتسلسل بصري أفضل، وحواف وعناصر أكثر اتساقًا، وشريط تنقل أنظف، وزر إضافة عائم أفضل، ونظامًا بصريًا متناسقًا للوضعين الفاتح والداكن.
 
-### 2.0.0 — مخطط
+تظل كل المميزات السابقة متاحة: تسجيل التمارين، ملخصات التقدم، متابعة الـ streak، الرسوم البيانية، الإنجازات، التذكيرات، النسخ الاحتياطي والاسترجاع JSON، الثيمات اليدوية، Dynamic Color، الألوان المخصصة، onboarding، صفحة عن التطبيق، وتحديثات OTA من GitHub.
 
-سيتم توثيق إعادة التصميم البصرية الكاملة هنا باللغة الإنجليزية أولًا، ثم التفاصيل العربية.
+### الإصدار
+
+هذا هو الإصدار الرسمي **2.0.0**. تم بناء APK ونشره من خلال GitHub Actions وGitHub Releases.
