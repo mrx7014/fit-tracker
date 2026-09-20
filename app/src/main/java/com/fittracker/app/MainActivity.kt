@@ -80,6 +80,8 @@ private const val USER_NAME = "user_name"
 private const val DARK = "dark_mode"
 private const val UNIT = "unit"
 private const val REMINDER = "reminder"
+private const val REMINDER_HOUR = "reminder_hour"
+private const val REMINDER_MINUTE = "reminder_minute"
 private const val REMINDER_CHANNEL = "fittracker_reminders"
 private const val THEME = "theme_mode"
 private const val DYNAMIC = "dynamic_color"
@@ -99,6 +101,8 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     var darkMode by mutableStateOf(prefs.getBoolean(DARK, false)); private set
     var unit by mutableStateOf(UnitMode.valueOf(prefs.getString(UNIT, UnitMode.KG.name) ?: UnitMode.KG.name)); private set
     var reminders by mutableStateOf(prefs.getBoolean(REMINDER, false)); private set
+    var reminderHour by mutableIntStateOf(prefs.getInt(REMINDER_HOUR, 20)); private set
+    var reminderMinute by mutableIntStateOf(prefs.getInt(REMINDER_MINUTE, 0)); private set
     var themeMode by mutableStateOf(ThemeMode.valueOf(prefs.getString(THEME, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name)); private set
     var dynamicColors by mutableStateOf(prefs.getBoolean(DYNAMIC, true)); private set
     var accent by mutableStateOf(prefs.getInt(ACCENT, 0)); private set
@@ -111,7 +115,9 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     fun restore(data: List<Lift>) { lifts = data.sortedByDescending { it.id }; save() }
     fun toggleDark() { darkMode = !darkMode; prefs.edit().putBoolean(DARK, darkMode).apply() }
     fun updateUnit(u: UnitMode) { unit = u; prefs.edit().putString(UNIT, u.name).apply() }
-    fun updateReminders(enabled: Boolean) { reminders = enabled; prefs.edit().putBoolean(REMINDER, enabled).apply(); if (enabled) ReminderManager.schedule(context) else ReminderManager.cancel(context) }
+    fun updateReminders(enabled: Boolean) { reminders = enabled; prefs.edit().putBoolean(REMINDER, enabled).apply(); if (enabled) ReminderManager.schedule(context, reminderHour, reminderMinute) else ReminderManager.cancel(context) }
+    fun updateReminderTime(hour: Int, minute: Int) { reminderHour = hour; reminderMinute = minute; prefs.edit().putInt(REMINDER_HOUR, hour).putInt(REMINDER_MINUTE, minute).apply(); if (reminders) ReminderManager.schedule(context, hour, minute) }
+    fun reminderTimeLabel(): String = "%02d:%02d".format(Locale.US, reminderHour, reminderMinute)
     fun updateTheme(mode: ThemeMode) { themeMode = mode; prefs.edit().putString(THEME, mode.name).apply() }
     fun updateDynamic(enabled: Boolean) { dynamicColors = enabled; prefs.edit().putBoolean(DYNAMIC, enabled).apply() }
     fun updateAccent(index: Int) { accent = index; prefs.edit().putInt(ACCENT, index).apply() }
@@ -133,7 +139,7 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
 }
 
 private object ReminderManager {
-    fun schedule(context: Context) { val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager; manager.createNotificationChannel(NotificationChannel(REMINDER_CHANNEL, "FitTracker reminders", NotificationManager.IMPORTANCE_DEFAULT)); val intent = PendingIntent.getBroadcast(context, 77, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager; val first = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 20); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis; alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, first, AlarmManager.INTERVAL_DAY, intent) }
+    fun schedule(context: Context, hour: Int, minute: Int) { val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager; manager.createNotificationChannel(NotificationChannel(REMINDER_CHANNEL, "FitTracker reminders", NotificationManager.IMPORTANCE_DEFAULT)); val intent = PendingIntent.getBroadcast(context, 77, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager; val first = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis; alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, first, AlarmManager.INTERVAL_DAY, intent) }
     fun cancel(context: Context) { val intent = PendingIntent.getBroadcast(context, 77, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(intent) }
 }
 
@@ -241,7 +247,9 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun Settings(vm: LiftViewModel, export: () -> Unit, restore: () -> Unit, about: () -> Unit, reminder: (Boolean) -> Unit) {
+    var showTimePicker by remember { mutableStateOf(false) }
     LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Text("الإعدادات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text("تحكم في تجربتك وبياناتك", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         item { NameSettings(vm) }
@@ -274,7 +282,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
                 }
             }
         }
-        item { SettingsCard(Icons.Default.Notifications, L("تذكير يومي", "Daily reminder"), L("تنبيه الساعة 8 مساءً للحفاظ على الاستريك", "8 PM reminder to keep your streak alive")) { Switch(vm.reminders, reminder) } }
+        item { Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Notifications, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(L("تذكير يومي", "Daily reminder"), fontWeight = FontWeight.Bold); Text(L("اختر الوقت الذي يناسبك", "Choose the time that works for you"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Switch(vm.reminders, reminder) }; OutlinedButton(onClick = { showTimePicker = true }, enabled = vm.reminders, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Schedule, null); Spacer(Modifier.width(8.dp)); Text(L("وقت التذكير: ${vm.reminderTimeLabel()}", "Reminder time: ${vm.reminderTimeLabel()}")) } } } }
         item {
             Card(shape = RoundedCornerShape(22.dp)) {
                 Column(Modifier.padding(18.dp)) {
@@ -292,6 +300,8 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
+
+    if (showTimePicker) { val timeState = rememberTimePickerState(initialHour = vm.reminderHour, initialMinute = vm.reminderMinute, is24Hour = true); Dialog(onDismissRequest = { showTimePicker = false }) { Card(shape = RoundedCornerShape(28.dp)) { Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(L("اختار وقت التذكير", "Choose reminder time"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold); TimePicker(state = timeState); Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) { TextButton(onClick = { showTimePicker = false }, modifier = Modifier.weight(1f)) { Text(L("إلغاء", "Cancel")) }; Button(onClick = { vm.updateReminderTime(timeState.hour, timeState.minute); showTimePicker = false }, modifier = Modifier.weight(1f)) { Text(L("حفظ", "Save")) } } } } }
 @Composable private fun NameSettings(vm: LiftViewModel) { var name by remember(vm.userName) { mutableStateOf(vm.userName) }; Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column { Text(L("اسم المستخدم", "Username"), fontWeight = FontWeight.Bold); Text(L("غيّر الاسم الظاهر في التحية", "Change the name shown in your greeting"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } }; OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("الاسم", "Name")) }, shape = RoundedCornerShape(16.dp)); Button(onClick = { vm.updateUserName(name) }, enabled = name.trim().isNotEmpty() && name.trim() != vm.userName, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Text(L("حفظ الاسم", "Save name")) } } } }
 @Composable private fun SettingsCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, action: @Composable () -> Unit) { Card(shape = RoundedCornerShape(22.dp)) { Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(title, fontWeight = FontWeight.Bold); Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; action() } } }
 
