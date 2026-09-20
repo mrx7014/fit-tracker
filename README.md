@@ -1,126 +1,171 @@
-# Fit Tracker
+<div dir="rtl">
 
-Fit Tracker is a modern Android fitness tracking app built with Kotlin and Jetpack Compose. It helps you log workouts, plan weekly routines, monitor training progress, and stay consistent with reminders, achievements, and local analytics.
+# Fit Tracker 🏋️
 
-This project is designed for personal use and emphasizes a clean, lightweight experience with realistic workout tracking, Arabic/English localization, and privacy-first local storage.
+[![الإصدار](https://img.shields.io/github/v/release/mrx7014/fit-tracker?display_name=tag&style=flat-square&label=الإصدار)](https://github.com/mrx7014/fit-tracker/releases)
+[![البناء](https://img.shields.io/github/actions/workflow/status/mrx7014/fit-tracker/android.yml?style=flat-square&label=البناء)](https://github.com/mrx7014/fit-tracker/actions/workflows/android.yml)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.x-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Android](https://img.shields.io/badge/Android-API%2026%2B-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 
-## Features
+**Fit Tracker** هو تطبيق أندرويد حديث لتسجيل التمارين ومتابعة التقدم وبناء عادة رياضية مستمرة. صُمم التطبيق باستخدام Kotlin وJetpack Compose وMaterial 3، مع دعم كامل للغتين العربية والإنجليزية وتجرب�� استخدام بسيطة وخصوصية تركز على تخزين البيانات محليًا.
 
-- Workout logging by exercise, date, weight, and reps
-- Weekly workout plan with per-day exercise scheduling
-- Home overview with key metrics like streak, volume, and body stats
-- Weekly and monthly statistics with activity trends
-- Weight-vs-reps chart for progress tracking
-- Achievement system for milestones and consistency
-- Reminder support for daily workouts
-- Dark mode, dynamic colors, theme choices, and language options
-- Arabic and English interface support
-- JSON backup and restore of workout data
-- Local-only storage with no backend required
+[تحميل آخر إصدار](https://github.com/mrx7014/fit-tracker/releases/latest) · [سجل التغييرات](CHANGELOG.md) · [النسخة الإنجليزية](README.en.md)
 
-## Tech Stack
+</div>
 
-- Kotlin
-- Android Jetpack
-- Jetpack Compose
-- Material 3
-- DataStore Preferences
-- Gradle Kotlin DSL
+## ✨ المميزات
 
-## Screenshots
+- تسجيل التمرين باسم التمرين والتاريخ والوزن والعدّات.
+- جدول تمارين أسبوعي مع إضافة وحذف تمارين لكل يوم.
+- لوحة رئيسية تعرض أهم الأرقام وسجل التمارين وسلسلة التمارين.
+- إحصائيات أسبوعية وشهرية للجلسات والعدّات والأيام النشطة ومتوسط الوزن.
+- رسم بياني يوضح العلاقة بين الوزن والعدّات مع أسماء التمارين.
+- إنجازات تحفّزك على الاستمرار وتحقيق أهداف جديدة.
+- تذكير يومي بوقت قابل للتخصيص.
+- الوضع الفاتح والداكن ووضع النظام والألوان الديناميكية.
+- اختيار وحدات الوزن بين الكيلوجرام والرطل.
+- دعم العربية والإنجليزية واتجاه RTL للغة العربية.
+- دعم الأرقام العربية والهندية والفارسية في الإدخال.
+- تصدير واستيراد نسخة احتياطية من بيانات التمارين بصيغة JSON.
+- لا يحتاج إلى حساب أو خادم؛ بيانات التمارين محفوظة محليًا على الجهاز.
 
-This repository does not currently include app screenshots, but the app includes:
+## 📱 شاشات التطبيق
 
-- Home dashboard
-- Workout plan
-- Statistics
-- Achievements
-- Settings
-- About section
-- First-run onboarding and profile setup
+يحتوي التطبيق على الشاشات التالية:
 
-## Project Structure
+| الشاشة | الوظيفة |
+| --- | --- |
+| الرئيسية | ملخص الأداء وسجل التمارين وإضافة تمرين جديد |
+| الجدول | تخطيط تمارين الأسبوع |
+| الإحصائيات | تحليل أسبوعي وشهري ورسم الوزن مقابل العدّات |
+| الإنجازات | متابعة الإنجازات وسلسلة التمارين |
+| الإعدادات | الملف الشخصي والمظهر واللغة والتذكيرات والنسخ الاحتياطي |
+| عن التطبيق | معلومات Fit Tracker والمطور والإصدارات |
 
-```text
-fit-tracker/
-├── app/
-│   ├── build.gradle.kts
-│   └── src/
-│       └── main/
-│           ├── AndroidManifest.xml
-│           ├── java/com/fittracker/app/
-│           └── res/
-├── gradle/
-├── .github/
-├── .gitignore
-├── build.gradle.kts
-├── gradle.properties
-├── gradlew
-├── gradlew.bat
-├── settings.gradle.kts
-├── CHANGELOG.md
-└── README.md
-```
+> لا توجد لقطات شاشة منشورة حاليًا داخل المستودع. يمكن إضافة الصور لاحقًا داخل مجلد `docs/images/` وربطها بهذا القسم.
 
-## Requirements
+## 🧰 التقنيات المستخدمة
 
-- Android Studio Ladybug or newer
-- JDK 21
-- Android SDK with API 35 support
-- Gradle wrapper included in the repo
+- **Kotlin**
+- **Android Jetpack**
+- **Jetpack Compose**
+- **Material 3**
+- **Compose Material Icons**
+- **ViewModel**
+- **SharedPreferences** للتخزين المحلي الحالي
+- **Gradle Kotlin DSL**
+- **GitHub Actions** للبناء ونشر الإصدارات
 
-## Getting Started
+## 📋 متطلبات التشغيل والتطوير
 
-1. Clone the repository:
+- Android Studio Ladybug أو إصدار أحدث.
+- JDK 21.
+- Android SDK API 35.
+- جهاز أو محاكي يعمل بنظام Android 8.0 (API 26) أو أحدث.
+- اتصال بالإنترنت عند أول مزامنة لاعتمادات Gradle.
+
+## 🚀 التشغيل محليًا
 
 ```bash
 git clone https://github.com/mrx7014/fit-tracker.git
 cd fit-tracker
 ```
 
-2. Open the project in Android Studio.
-
-3. Let Gradle sync the project.
-
-4. Build and run the app:
+افتح المشروع في Android Studio، ثم انتظر اكتمال مزامنة Gradle. لبناء نسخة Debug من الطرفية:
 
 ```bash
+# Linux / macOS
 ./gradlew assembleDebug
+
+# Windows
+./gradlew.bat assembleDebug
 ```
 
-Or run directly from Android Studio on an emulator or connected device.
+سيتم إنشاء ملف APK هنا:
 
-## App Identity
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
 
-- Application ID: `com.fittracker.app`
-- Namespace: `com.fittracker.app`
-- Minimum SDK: 26
-- Target SDK: 35
-- Version: `3.0.0`
+يمكنك أيضًا تشغيل التطبيق مباشرة من Android Studio على محاكي أو جهاز أندرويد متصل.
 
-## Local Data Behavior
+## 📦 التحميل
 
-Fit Tracker stores workout data locally on the device using SharedPreferences and DataStore. This keeps the app lightweight and private, while still supporting backup and restore through export/import of JSON files.
+يمكن تحميل أحدث APK من صفحة [GitHub Releases](https://github.com/mrx7014/fit-tracker/releases/latest).
 
-## Contributing
+الإصدار الحالي هو **3.0.0**، ومعرّف التطبيق هو:
 
-Contributions are welcome. If you want to improve the app, add features, or fix issues:
+```text
+com.fittracker.app
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Open a pull request
+## 🤖 GitHub Actions
 
-## License
+يحتوي المشروع على سير عمل يدوي في `.github/workflows/android.yml`:
 
-This project does not currently include a license file. Please check the repository settings or contact the maintainer before using it in production or redistributing it.
+1. افتح تبويب **Actions** في GitHub.
+2. اختر **Build Fit Tracker app**.
+3. اضغط **Run workflow**.
+4. اختر ما إذا كنت تريد نشر Release.
+5. عند نشر إصدار، أدخل رقمًا بصيغة مثل `3.0.0` أو `3.0.0-beta1`.
 
-## Maintainer
+يقوم سير العمل ببناء APK ورفعه كـ Artifact، ويمكنه نشره تلقائيًا ضمن GitHub Release عند تفعيل خيار النشر.
 
-- MRX7014
-- GitHub: https://github.com/mrx7014
-- Repository: https://github.com/mrx7014/fit-tracker
+## 🔐 البيانات والخصوصية
 
-## Release Notes
+يخزن التطبيق بيانات الملف الشخصي والتمارين والإعدادات محليًا على الجهاز، ولا يتطلب خادمًا أو حسابًا. يمكنك استخدام ميزة النسخ الاحتياطي لتصدير بيانات التمارين إلى ملف JSON واستعادتها لاحقًا.
 
-The project has a changelog in `CHANGELOG.md` with detailed highlights for version `3.0.0` and earlier updates.
+> احفظ ملفات النسخ الاحتياطي في مكان آمن؛ حذف التطبيق أو مسح بياناته قد يؤدي إلى فقدان البيانات المحلية.
+
+## 🗂️ هيكل المشروع
+
+```text
+fit-tracker/
+├── app/
+│   ├── build.gradle.kts
+│   └── src/main/
+│       ├── AndroidManifest.xml
+│       ├── java/com/fittracker/app/MainActivity.kt
+│       └── res/
+├── .github/workflows/android.yml
+├── build.gradle.kts
+├── gradle.properties
+├── gradlew
+├── gradlew.bat
+├── settings.gradle.kts
+├── CHANGELOG.md
+├── README.md
+└── README.en.md
+```
+
+## 🤝 المساهمة
+
+المساهمات مرحب بها:
+
+1. اعمل Fork للمستودع.
+2. أنشئ فرعًا جديدًا لميزتك أو إصلاحك.
+3. نفّذ التغييرات وأضف Commit واضحًا.
+4. افتح Pull Request مع شرح مختصر للتغييرات.
+
+## 📄 الترخيص
+
+لا يحتوي المشروع حاليًا على ملف ترخيص. تواصل مع مالك المستودع قبل استخدام الكود أو إعادة توزيعه في مشروع تجاري أو إنتاجي.
+
+## 👤 المطور
+
+- **MRX7014**
+- [حساب GitHub](https://github.com/mrx7014)
+- [مستودع Fit Tracker](https://github.com/mrx7014/fit-tracker)
+- [الإصدارات](https://github.com/mrx7014/fit-tracker/releases)
+
+## 📚 المزيد
+
+للاطلاع على تفاصيل الإصدار الحالي والتغييرات السابقة، راجع [CHANGELOG.md](CHANGELOG.md).
+
+---
+
+<div dir="rtl">
+
+صُنع بـ ❤️ لمساعدة الرياضيين على التسجيل والاستمرار والتطور.
+
+</div>
