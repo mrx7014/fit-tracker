@@ -445,5 +445,79 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
+@Composable private fun AboutScreen() {
+    val uriHandler = LocalUriHandler.current
+    val profileUri = "https://github.com/mrx7014"
+    val repoUri = "https://github.com/mrx7014/fit-tracker"
+    val releasesUri = "$repoUri/releases"
+    LazyColumn(contentPadding = PaddingValues(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(painter = painterResource(com.fittracker.app.R.drawable.mrx7014_avatar), contentDescription = "MRX7014", modifier = Modifier.size(104.dp).clip(RoundedCornerShape(52.dp)))
+                    Spacer(Modifier.height(14.dp))
+                    Text("MRX7014", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    Text(L("المطور وصاحب فكرة Fit Tracker", "Developer and creator of Fit Tracker"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Text(L("تطبيق عملي لمساعدة الرياضيين على تسجيل التمرينات، متابعة الأرقام، وبناء عادة مستمرة.", "A practical app for logging workouts, tracking numbers, and building a consistent training habit."), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+            }
+        }
+        item {
+            Text(L("عن Fit Tracker", "About Fit Tracker"), Modifier.fillMaxWidth(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Text(L("كل الأدوات التي تحتاجها لتفهم تقدمك وتحافظ على استمراريتك.", "Everything you need to understand your progress and stay consistent."), Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item { AboutFeatureCard(Icons.Default.FitnessCenter, L("تسجيل سريع", "Fast logging"), L("سجّل اسم التمرين والوزن والعدّات والتاريخ في ثواني.", "Log the exercise, weight, reps, and date in seconds.")) }
+        item { AboutFeatureCard(Icons.Default.BarChart, L("إحصائيات واضحة", "Clear statistics"), L("شاهد العلاقة بين الوزن والعدّات مع رسم بياني وكل نقطة باسم تمرينها.", "See the relationship between weight and reps with every point labeled by exercise.")) }
+        item { AboutFeatureCard(Icons.Default.EmojiEvents, L("إنجازات وتحفيز", "Achievements and motivation"), L("تابع الإنجازات، الاستريك، وأرقامك المهمة في مكان واحد.", "Track achievements, streaks, and important numbers in one place.")) }
+        item { AboutFeatureCard(Icons.Default.Notifications, L("تذكير على مزاجك", "Reminders on your schedule"), L("اختار الوقت المناسب لك للتذكير اليومي من الإعدادات.", "Choose your preferred daily reminder time from Settings.")) }
+        item { AboutFeatureCard(Icons.Default.Lock, L("خصوصية أولاً", "Privacy first"), L("بيانات التمرينات محفوظة محليًا على جهازك، مع إمكانية تصدير واستيراد نسخة JSON.", "Workout data stays on your device, with JSON export and import when you need it.")) }
+        item {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(L("معلومات التطبيق", "App information"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("Fit Tracker 2.1.0", fontWeight = FontWeight.Bold)
+                    Text("Application ID: com.fittracker.app", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Kotlin • Jetpack Compose • Material 3", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(L("مفتوح المصدر على GitHub", "Open source on GitHub"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = { uriHandler.openUri(profileUri) }, Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Person, null); Spacer(Modifier.width(6.dp)); Text(L("حساب المطور", "Developer")) }
+                OutlinedButton(onClick = { uriHandler.openUri(repoUri) }, Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Code, null); Spacer(Modifier.width(6.dp)); Text(L("المستودع", "Repository")) }
+            }
+        }
+        item { Button(onClick = { uriHandler.openUri(releasesUri) }, Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.SystemUpdate, null); Spacer(Modifier.width(8.dp)); Text(L("صفحة الإصدارات", "Release page")) } }
+    }
+}
+
+@Composable private fun AboutFeatureCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, description: String) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(Modifier.size(44.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(icon, null, Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.primary) }
+            Spacer(Modifier.width(12.dp))
+            Column { Text(title, fontWeight = FontWeight.Bold); Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+    }
+}
+
+@Composable private fun LiftRow(lift: Lift, vm: LiftViewModel) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    AnimatedVisibility(visible, enter = fadeIn() + slideInVertically { it / 2 }) {
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Surface(Modifier.size(46.dp), shape = RoundedCornerShape(15.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.FitnessCenter, null, Modifier.padding(11.dp), tint = MaterialTheme.colorScheme.primary) }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) { Text(lift.exercise, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium); Text("${lift.date} • ${lift.reps} تكرار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                Column(horizontalAlignment = Alignment.End) { Text("${"%.1f".format(vm.displayWeight(lift.weight))}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary); Text(if (vm.unit == UnitMode.KG) "kg" else "lb", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                IconButton(onClick = { vm.remove(lift.id) }) { Icon(Icons.Default.DeleteOutline, "حذف", tint = MaterialTheme.colorScheme.error) }
+            }
+        }
+    }
+}
+
 @Composable private fun UpdateCard() { val uriHandler = LocalUriHandler.current; val releasesUrl = "https://github.com/mrx7014/fit-tracker/releases"; Card(Modifier.fillMaxWidth().clickable { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) { Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(48.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.SystemUpdate, null, Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.onPrimary) }; Spacer(Modifier.width(14.dp)); Column(Modifier.weight(1f)) { Text(L("تحديث", "Update"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Text("الإصدار الحالي 2.1.0", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(L("افتح صفحة الإصدارات لمعرفة الجديد", "Open releases to see what's new"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Button(onClick = { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(14.dp)) { Icon(Icons.Default.OpenInNew, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("تحديث", "Update")) } } } }
 @Composable private fun FitTrackerTheme(vm: LiftViewModel, content: @Composable () -> Unit) { val systemDark = isSystemInDarkTheme(); val view = LocalView.current; val dark = when (vm.themeMode) { ThemeMode.DARK -> true; ThemeMode.LIGHT -> false; ThemeMode.SYSTEM -> systemDark }; val palettes = listOf(Color(0xFF0B5D46), Color(0xFF6750A4), Color(0xFF9C4146), Color(0xFF006874)); val accent = palettes.getOrElse(vm.accent) { palettes.first() }; val light = lightColorScheme(primary = accent, onPrimary = Color.White, primaryContainer = accent.copy(alpha = .22f), secondaryContainer = Color(0xFFFFD9B8), tertiaryContainer = Color(0xFFD9E2FF), background = Color(0xFFF8FAF6)); val darkScheme = darkColorScheme(primary = accent.copy(alpha = .9f), onPrimary = Color.White, primaryContainer = accent.copy(alpha = .5f), secondaryContainer = Color(0xFF70451D)); val scheme = if (vm.dynamicColors && android.os.Build.VERSION.SDK_INT >= 31) { val ctx = LocalContext.current; if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx) } else if (dark) darkScheme else light; val english = FontFamily(Font(com.fittracker.app.R.font.google_sans_flex)); val arabic = FontFamily(Font(com.fittracker.app.R.font.noto_sans_arabic)); SideEffect { val window = (view.context as? Activity)?.window; if (window != null) { val controller = WindowCompat.getInsetsController(window, view); controller.isAppearanceLightStatusBars = !dark; controller.isAppearanceLightNavigationBars = !dark; window.statusBarColor = scheme.background.toArgb(); window.navigationBarColor = scheme.background.toArgb() } }; MaterialTheme(colorScheme = scheme, typography = Typography().run { copy(bodyLarge = bodyLarge.copy(fontFamily = arabic), bodyMedium = bodyMedium.copy(fontFamily = arabic), titleLarge = titleLarge.copy(fontFamily = english), headlineSmall = headlineSmall.copy(fontFamily = english), headlineMedium = headlineMedium.copy(fontFamily = english)) }, content = content) }
