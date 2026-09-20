@@ -1,4 +1,4 @@
-name: Android CI
+name: Build Fit Tracker app
 on:
   workflow_dispatch:
     inputs:
