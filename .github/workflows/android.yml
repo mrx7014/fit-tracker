@@ -19,15 +19,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        # Use the Node.js 24-based action releases to avoid future runtime warnings.
+        uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
       - name: Apply release version
@@ -44,7 +45,7 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fit-tracker-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
