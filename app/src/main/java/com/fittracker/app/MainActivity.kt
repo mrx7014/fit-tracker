@@ -203,7 +203,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 
 @Composable private fun AppNavigation(page: Int, onPage: (Int) -> Unit) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
-        NavigationBarItem(page == 0, { onPage(0) }, icon = { Icon(Icons.Default.Insights, null) }, label = { Text(L("ملخص", "Summary")) })
+        NavigationBarItem(page == 0, { onPage(0) }, icon = { Icon(Icons.Default.Insights, null) }, label = { Text(L("الرئيسية", "Home")) })
         NavigationBarItem(page == 1, { onPage(1) }, icon = { Icon(Icons.Default.BarChart, null) }, label = { Text(L("إحصائيات", "Stats")) })
         NavigationBarItem(page == 2, { onPage(2) }, icon = { Icon(Icons.Default.EmojiEvents, null) }, label = { Text(L("الإنجازات", "Achievements")) })
         NavigationBarItem(page == 3, { onPage(3) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text(L("الإعدادات", "Settings")) })
