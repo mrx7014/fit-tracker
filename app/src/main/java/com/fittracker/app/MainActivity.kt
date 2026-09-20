@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.toArgb
@@ -202,7 +203,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 }
 
 @Composable private fun AppNavigation(page: Int, onPage: (Int) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
+    NavigationBar(Modifier.padding(horizontal = 14.dp, vertical = 8.dp).shadow(10.dp, RoundedCornerShape(28.dp)).clip(RoundedCornerShape(28.dp)), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
         NavigationBarItem(page == 0, { onPage(0) }, icon = { Icon(Icons.Default.Insights, null) }, label = { Text(L("الرئيسية", "Home")) })
         NavigationBarItem(page == 1, { onPage(1) }, icon = { Icon(Icons.Default.BarChart, null) }, label = { Text(L("إحصائيات", "Stats")) })
         NavigationBarItem(page == 2, { onPage(2) }, icon = { Icon(Icons.Default.EmojiEvents, null) }, label = { Text(L("الإنجازات", "Achievements")) })
