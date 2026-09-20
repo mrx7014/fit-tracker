@@ -85,6 +85,7 @@ private const val PREFS = "fittracker"
 private const val LIFTS = "lifts"
 private const val PLAN = "workout_plan"
 private const val ONBOARDING = "onboarding_done"
+private const val GUIDE_SEEN = "guide_seen"
 private const val USER_NAME = "user_name"
 private const val USER_WEIGHT = "user_weight"
 private const val USER_HEIGHT = "user_height"
@@ -186,6 +187,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     var page by remember { mutableIntStateOf(0) }
     var showAdd by remember { mutableStateOf(false) }
     var intro by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(ONBOARDING, false)) }
+    var guideVisible by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(GUIDE_SEEN, false)) }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? -> uri?.let { context.contentResolver.openOutputStream(it)?.use { out -> out.write(JsonBackup.encode(vm.lifts).toByteArray()) } } }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { reader -> vm.restore(JsonBackup.decode(reader.readText())) } } }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -211,7 +213,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
                             1 -> ScheduleScreen(vm)
                             2 -> StatsScreen(vm)
                             3 -> AchievementsScreen(vm)
-                            4 -> Settings(vm, { export.launch("fittracker-backup.json") }, { restore.launch(arrayOf("application/json")) }, { page = 5 }, { enabled -> if (enabled && Build.VERSION.SDK_INT >= 33) notificationPermission.launch("android.permission.POST_NOTIFICATIONS"); vm.updateReminders(enabled) })
+                            4 -> Settings(vm, { export.launch("fittracker-backup.json") }, { restore.launch(arrayOf("application/json")) }, { page = 5 }, { enabled -> if (enabled && Build.VERSION.SDK_INT >= 33) notificationPermission.launch("android.permission.POST_NOTIFICATIONS"); vm.updateReminders(enabled) }, { guideVisible = true })
                             else -> AboutScreen()
                         }
                     }
@@ -219,6 +221,36 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
             }
         }
         if (showAdd) AddDialog({ showAdd = false }) { e, d, w, r -> vm.add(e, d, w, r); showAdd = false }
+        if (guideVisible && !intro && vm.userName.isNotBlank()) { GuideOverlay(onClose = { context.getSharedPreferences(PREFS, 0).edit().putBoolean(GUIDE_SEEN, true).apply(); guideVisible = false }) }
+    }
+}
+
+@Composable private fun GuideOverlay(onClose: () -> Unit) {
+    var step by remember { mutableIntStateOf(0) }
+    val steps = listOf(
+        Triple(Icons.Default.Home, L("الرئيسية", "Home"), L("هنا هتلاقي تحيتك، سلسلة التمارين، أرقامك المهمة، وسجل كل التمرينات التي سجلتها.", "Find your greeting, workout streak, key numbers, and workout history here.")),
+        Triple(Icons.Default.AddCircle, L("إضافة تمرين", "Add a workout"), L("اضغط زر + لإضافة اسم التمرين والتاريخ والوزن والعدّات. تقدر تكتب الأرقام بالعربي أو الإنجليزي.", "Tap + to log an exercise, date, weight, and reps. Arabic and English digits are supported.")),
+        Triple(Icons.Default.EventNote, L("جدول التمارين", "Workout plan"), L("اعمل جدول أسبوعي لتمارينك، اختار اليوم، وأضف أو احذف التمرينات المخططة.", "Build a weekly plan, choose a day, and add or remove planned workouts.")),
+        Triple(Icons.Default.Insights, L("الإحصائيات", "Statistics"), L("قارن أداء الأسبوع والشهر، شوف العدّات والأيام النشطة ومتوسط الوزن، واستكشف الجراف.", "Compare weekly and monthly performance, active days, reps, average weight, and the chart.")),
+        Triple(Icons.Default.EmojiEvents, L("الإنجازات", "Achievements"), L("تابع الإنجازات والاستريك وشوف إيه اللي فتحته وإيه اللي لسه مستنيك.", "Track achievements and streaks, and see what you have unlocked.")),
+        Triple(Icons.Default.Settings, L("الإعدادات", "Settings"), L("غيّر بياناتك، عبارة التحفيز، التذكير اليومي، المظهر، اللغة، والنسخ الاحتياطي. وتقدر تفتح الدليل من زر تعلّم التطبيق.", "Edit your profile, motivation, reminders, appearance, language, backups, and reopen this guide anytime."))
+    )
+    val current = steps[step]
+    Dialog(onDismissRequest = onClose) {
+        Card(shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(Modifier.size(76.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(current.first, null, Modifier.padding(20.dp), tint = MaterialTheme.colorScheme.primary) }
+                Text(L("دليل Fit Tracker", "Fit Tracker guide"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text(current.second, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(current.third, textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LinearProgressIndicator(progress = { (step + 1).toFloat() / steps.size }, modifier = Modifier.fillMaxWidth())
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onClose) { Text(L("تخطي", "Skip")) }
+                    Spacer(Modifier.weight(1f))
+                    Button(onClick = { if (step == steps.lastIndex) onClose() else step++ }) { Text(if (step == steps.lastIndex) L("ابدأ الآن", "Get started") else L("التالي", "Next")) }
+                }
+            }
+        }
     }
 }
 
@@ -300,7 +332,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
-@Composable private fun Settings(vm: LiftViewModel, onExport: () -> Unit, onRestore: () -> Unit, onAbout: () -> Unit, onReminder: (Boolean) -> Unit) {
+@Composable private fun Settings(vm: LiftViewModel, onExport: () -> Unit, onRestore: () -> Unit, onAbout: () -> Unit, onReminder: (Boolean) -> Unit, onShowGuide: () -> Unit) {
     var editingProfile by remember { mutableStateOf(false) }
     var name by remember(vm.userName) { mutableStateOf(vm.userName) }
     var profileWeight by remember(vm.bodyWeight) { mutableStateOf(if (vm.bodyWeight > 0f) "%.1f".format(vm.bodyWeight) else "") }
@@ -369,6 +401,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
                 OutlinedButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Download, null); Spacer(Modifier.width(8.dp)); Text(L("استيراد نسخة احتياطية", "Import backup")) }
             } }
         }
+        item { OutlinedButton(onClick = onShowGuide, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.School, null); Spacer(Modifier.width(8.dp)); Text(L("تعلّم التطبيق", "Learn the app")) } }
         item { Button(onClick = onAbout, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Info, null); Spacer(Modifier.width(8.dp)); Text(L("عن التطبيق", "About")) } }
     }
     if (editingTime) {
