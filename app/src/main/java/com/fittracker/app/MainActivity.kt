@@ -519,6 +519,11 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 @Composable private fun PeriodAnalyticsCard(period: AnalyticsPeriod, lifts: List<Lift>, vm: LiftViewModel) {
     val context = LocalContext.current
     val title = if (period == AnalyticsPeriod.WEEK) L("ملخص الأسبوع", "Weekly summary") else L("ملخص الشهر", "Monthly summary")
+    val shareChooserTitle = L("مشاركة الإحصائيات", "Share statistics")
+    val sessionsLabel = L("الجلسات", "Sessions")
+    val repsLabel = L("العدّات", "Reps")
+    val activeDaysLabel = L("الأيام النشطة", "Active days")
+    val averageWeightLabel = L("متوسط الوزن", "Average weight")
     val activeDays = lifts.map { it.date }.distinct().size
     val totalReps = lifts.sumOf { it.reps }
     val avgWeight = lifts.map { vm.displayWeight(it.weight) }.average().takeIf { !it.isNaN() } ?: 0.0
@@ -540,7 +545,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
             AdaptiveMetricLayout(first = { MetricTile("${lifts.size}", L("جلسات", "Sessions"), Icons.Default.Bolt, MaterialTheme.colorScheme.surface) }, second = { MetricTile("$totalReps", L("عدّات", "Reps"), Icons.Default.Repeat, MaterialTheme.colorScheme.surface) }, third = { MetricTile("$activeDays", L("أيام نشطة", "Active days"), Icons.Default.CalendarToday, MaterialTheme.colorScheme.surface) })
             Text("${"%.1f".format(avgWeight)} ${if (vm.unit == UnitMode.KG) "kg" else "lb"} ${L("متوسط الوزن", "average weight")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             Row(Modifier.fillMaxWidth().height(92.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) { repeat(barCount) { index -> val count = bucketCounts.getOrElse(index) { 0 }; Box(Modifier.weight(1f).fillMaxHeight(fraction = (count.toFloat() / maxCount).coerceIn(.08f, 1f)).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primary)) } }
-            OutlinedButton(onClick = { val shareText = "Fit Tracker — $title\n\n${L("الجلسات", "Sessions")}: ${lifts.size}\n${L("العدّات", "Reps")}: $totalReps\n${L("الأيام النشطة", "Active days")}: $activeDays\n${L("متوسط الوزن", "Average weight")}: ${"%.1f".format(avgWeight)} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}"; val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareText) }; context.startActivity(Intent.createChooser(intent, L("مشاركة الإحصائيات", "Share statistics"))) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Share, null); Spacer(Modifier.width(8.dp)); Text(L("مشاركة إحصائيات الفترة", "Share period statistics")) }
+            OutlinedButton(onClick = { val shareText = "Fit Tracker — $title\n\n$sessionsLabel: ${lifts.size}\n$repsLabel: $totalReps\n$activeDaysLabel: $activeDays\n$averageWeightLabel: ${"%.1f".format(avgWeight)} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}"; val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareText) }; context.startActivity(Intent.createChooser(intent, shareChooserTitle)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Share, null); Spacer(Modifier.width(8.dp)); Text(L("مشاركة إحصائيات الفترة", "Share period statistics")) }
         }
     }
 }
