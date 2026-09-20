@@ -1,5 +1,4 @@
 name: Android CI
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,10 +7,13 @@ on:
         required: true
         type: boolean
         default: false
-
+      version_name:
+        description: 'App version for the GitHub Release (used only when publish_release is true)'
+        required: false
+        type: string
+        default: '2.1.0'
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -28,6 +30,17 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - name: Apply release version
+        if: inputs.publish_release == true
+        env:
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version_name: $VERSION_NAME. Use a value such as 2.1.0 or 2.1.0-beta1."
+            exit 1
+          fi
+          sed -i -E "s/versionName = \"[^\"]+\"/versionName = \"$VERSION_NAME\"/" app/build.gradle.kts
+          echo "Building release version $VERSION_NAME"
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
       - name: Upload APK artifact
@@ -36,8 +49,10 @@ jobs:
           name: fit-tracker-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: inputs.publish_release == true
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ inputs.version_name }}
+          name: Fit Tracker v${{ inputs.version_name }}
           body_path: CHANGELOG.md
           files: app/build/outputs/apk/debug/app-debug.apk
