@@ -231,8 +231,10 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     var date by remember { mutableStateOf(LiftViewModel.fmt.format(Date())) }
     var weight by remember { mutableStateOf("") }
     var reps by remember { mutableStateOf("") }
-    val parsedWeight = weight.replace(',', '.').toFloatOrNull()
-    val parsedReps = reps.toIntOrNull()
+    val normalizedDate = date.normalizeDigits()
+    val normalizedWeight = weight.normalizeDigits().replace('٫', '.').replace(',', '.')
+    val parsedWeight = normalizedWeight.toFloatOrNull()
+    val parsedReps = reps.normalizeDigits().toIntOrNull()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(L("إضافة تمرين", "Add workout")) },
@@ -246,7 +248,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
                 }
             }
         },
-        confirmButton = { Button(onClick = { onSave(exercise.trim(), date.trim(), parsedWeight ?: 0f, parsedReps ?: 0) }, enabled = exercise.trim().isNotEmpty() && date.trim().isNotEmpty() && parsedWeight != null && parsedWeight >= 0f && parsedReps != null && parsedReps > 0) { Text(L("حفظ", "Save")) } },
+        confirmButton = { Button(onClick = { onSave(exercise.trim(), normalizedDate.trim(), parsedWeight ?: 0f, parsedReps ?: 0) }, enabled = exercise.trim().isNotEmpty() && normalizedDate.trim().isNotEmpty() && parsedWeight != null && parsedWeight >= 0f && parsedReps != null && parsedReps > 0) { Text(L("حفظ", "Save")) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(L("إلغاء", "Cancel")) } }
     )
 }
