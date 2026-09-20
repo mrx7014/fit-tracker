@@ -11,7 +11,7 @@ on:
         description: 'App version for the GitHub Release (used only when publish_release is true)'
         required: false
         type: string
-        default: '2.1.0'
+        default: '3.0.0'
 permissions:
   contents: write
 jobs:
@@ -40,8 +40,12 @@ jobs:
             echo "Invalid version_name: $VERSION_NAME. Use a value such as 2.1.0 or 2.1.0-beta1."
             exit 1
           fi
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_NAME%%[-+]*}"
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
           sed -i -E "s/versionName = \"[^\"]+\"/versionName = \"$VERSION_NAME\"/" app/build.gradle.kts
-          echo "Building release version $VERSION_NAME"
+          sed -i -E "s/versionCode = [0-9]+/versionCode = $VERSION_CODE/" app/build.gradle.kts
+          sed -i -E "s/private const val APP_VERSION = \"[^\"]+\"/private const val APP_VERSION = \"$VERSION_NAME\"/" app/src/main/java/com/fittracker/app/MainActivity.kt
+          echo "Building release version $VERSION_NAME (versionCode $VERSION_CODE) across Gradle and app source"
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
       - name: Upload APK artifact
