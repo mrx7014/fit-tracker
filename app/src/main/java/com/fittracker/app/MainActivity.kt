@@ -467,8 +467,8 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = period == AnalyticsPeriod.WEEK, onClick = { period = AnalyticsPeriod.WEEK }, label = { Text(L("هذا الأسبوع", "This week")), }, leadingIcon = { Icon(Icons.Default.DateRange, null) })
-                FilterChip(selected = period == AnalyticsPeriod.MONTH, onClick = { period = AnalyticsPeriod.MONTH }, label = { Text(L("هذا الشهر", "This month")), }, leadingIcon = { Icon(Icons.Default.CalendarMonth, null) })
+                FilterChip(selected = period == AnalyticsPeriod.WEEK, onClick = { period = AnalyticsPeriod.WEEK }, label = { Text(L("هذا الأسبوع", "This week")) }, leadingIcon = { Icon(Icons.Default.DateRange, null) })
+                FilterChip(selected = period == AnalyticsPeriod.MONTH, onClick = { period = AnalyticsPeriod.MONTH }, label = { Text(L("هذا الشهر", "This month")) }, leadingIcon = { Icon(Icons.Default.CalendarMonth, null) })
             }
         }
         item { PeriodAnalyticsCard(period, periodLifts, vm) }
