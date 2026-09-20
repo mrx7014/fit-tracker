@@ -308,7 +308,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
         item { Text(L("الإعدادات", "Settings"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) }
         item {
             Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(L("الحساب", "Account"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(40.dp), shape = RoundedCornerShape(13.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Person, null, Modifier.padding(9.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.width(10.dp)); Text(L("بيانات الحساب", "Profile details"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
                 if (editingProfile) {
                     OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اسم المستخدم", "Your name")) }, leadingIcon = { Icon(Icons.Default.Person, null) })
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -340,9 +340,9 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
         }
         item {
             Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(L("التذكير اليومي", "Daily reminder"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(40.dp), shape = RoundedCornerShape(13.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Notifications, null, Modifier.padding(9.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.width(10.dp)); Text(L("التذكير اليومي", "Daily reminder"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
                 Row(verticalAlignment = Alignment.CenterVertically) { Text(L("تفعيل التذكير", "Enable reminder"), Modifier.weight(1f)); Switch(checked = vm.reminders, onCheckedChange = onReminder) }
-                ListItem(headlineContent = { Text(vm.reminderTimeLabel()) }, supportingContent = { Text(L("وقت التذكير", "Reminder time")) }, leadingContent = { Icon(Icons.Default.Schedule, null) }, trailingContent = { TextButton(onClick = { hour = vm.reminderHour.toString(); minute = vm.reminderMinute.toString().padStart(2, '0'); editingTime = true }) { Text(L("تغيير", "Change")) } })
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(40.dp), shape = RoundedCornerShape(13.dp), color = MaterialTheme.colorScheme.surfaceVariant) { Icon(Icons.Default.Schedule, null, Modifier.padding(9.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text(vm.reminderTimeLabel(), fontWeight = FontWeight.Bold); Text(L("وقت التذكير", "Reminder time"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; TextButton(onClick = { hour = vm.reminderHour.toString(); minute = vm.reminderMinute.toString().padStart(2, '0'); editingTime = true }) { Text(L("تغيير", "Change")) } }
             } }
         }
         item {
