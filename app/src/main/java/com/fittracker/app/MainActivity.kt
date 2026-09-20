@@ -85,6 +85,8 @@ private const val LIFTS = "lifts"
 private const val PLAN = "workout_plan"
 private const val ONBOARDING = "onboarding_done"
 private const val USER_NAME = "user_name"
+private const val USER_WEIGHT = "user_weight"
+private const val USER_HEIGHT = "user_height"
 private const val DARK = "dark_mode"
 private const val UNIT = "unit"
 private const val REMINDER = "reminder"
@@ -117,6 +119,8 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     var accent by mutableStateOf(prefs.getInt(ACCENT, 0)); private set
     var language by mutableStateOf(AppLanguage.valueOf(prefs.getString(LANGUAGE, AppLanguage.SYSTEM.name) ?: AppLanguage.SYSTEM.name)); private set
     var userName by mutableStateOf(prefs.getString(USER_NAME, "") ?: ""); private set
+    var bodyWeight by mutableFloatStateOf(prefs.getFloat(USER_WEIGHT, 0f)); private set
+    var heightCm by mutableFloatStateOf(prefs.getFloat(USER_HEIGHT, 0f)); private set
     private fun load() = prefs.getString(LIFTS, "")!!.split("\n").filter { it.isNotBlank() }.mapNotNull { p -> p.split("|").takeIf { it.size == 5 }?.let { runCatching { Lift(it[0].toLong(), it[1], it[2], it[3].toFloat(), it[4].toInt()) }.getOrNull() } }.sortedByDescending { it.id }
     private fun save() { prefs.edit().putString(LIFTS, lifts.joinToString("\n") { "${it.id}|${it.exercise}|${it.date}|${it.weight}|${it.reps}" }).apply() }
     private fun loadPlan() = prefs.getString(PLAN, "")!!.split("\n").filter { it.isNotBlank() }.mapNotNull { p -> p.split("|").takeIf { it.size == 5 }?.let { runCatching { PlanItem(it[0].toLong(), it[1].toInt(), it[2], it[3].toInt(), it[4].toInt()) }.getOrNull() } }.sortedBy { it.day }
@@ -136,6 +140,9 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     fun updateAccent(index: Int) { accent = index; prefs.edit().putInt(ACCENT, index).apply() }
     fun updateLanguage(value: AppLanguage) { language = value; prefs.edit().putString(LANGUAGE, value.name).apply() }
     fun updateUserName(value: String) { val cleaned = value.trim(); if (cleaned.isNotEmpty()) { userName = cleaned; prefs.edit().putString(USER_NAME, cleaned).apply() } }
+    fun updateProfile(name: String, weight: Float, height: Float) { val cleaned = name.trim(); if (cleaned.isNotEmpty() && weight > 0f && height > 0f) { userName = cleaned; bodyWeight = weight; heightCm = height; prefs.edit().putString(USER_NAME, cleaned).putFloat(USER_WEIGHT, weight).putFloat(USER_HEIGHT, height).apply() } }
+    fun updateBodyWeight(value: Float) { if (value > 0f) { bodyWeight = value; prefs.edit().putFloat(USER_WEIGHT, value).apply() } }
+    fun updateHeight(value: Float) { if (value > 0f) { heightCm = value; prefs.edit().putFloat(USER_HEIGHT, value).apply() } }
     fun displayWeight(kg: Float) = if (unit == UnitMode.KG) kg else kg * 2.20462f
     val totalVolume get() = lifts.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
     val uniqueDays get() = lifts.map { it.date }.distinct()
@@ -183,7 +190,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
         if (intro) {
             Onboarding { context.getSharedPreferences(PREFS, 0).edit().putBoolean(ONBOARDING, true).apply(); intro = false }
         } else if (vm.userName.isBlank()) {
-            NameSetup { vm.updateUserName(it) }
+            NameSetup { name, weight, height -> vm.updateProfile(name, weight, height) }
         } else {
             BackHandler(enabled = page != 0) { page = if (page == 5) 4 else 0 }
             Scaffold(
@@ -223,7 +230,32 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 
 @Composable private fun Header() { Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(48.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primary) { Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FitnessCenter, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(27.dp)) } }; Spacer(Modifier.width(12.dp)); Column { Text("FIT TRACKER", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Text("TRAIN SMARTER", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
 
-@Composable private fun NameSetup(onSave: (String) -> Unit) { var name by remember { mutableStateOf("") }; Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { Column(Modifier.fillMaxSize().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { Surface(Modifier.size(76.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Person, null, Modifier.padding(20.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.height(24.dp)); Text(L("أهلاً بيك في Fit Tracker", "Welcome to Fit Tracker"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black); Spacer(Modifier.height(10.dp)); Text(L("اكتب اسمك عشان نستخدمه في تحيتك", "Enter your name so we can personalize your greeting"), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant); Spacer(Modifier.height(24.dp)); OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), label = { Text(L("اسم المستخدم", "Your name")) }, singleLine = true, leadingIcon = { Icon(Icons.Default.Person, null) }, shape = RoundedCornerShape(16.dp)); Spacer(Modifier.height(18.dp)); Button(onClick = { onSave(name.trim()) }, enabled = name.trim().isNotEmpty(), modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(18.dp)) { Text(L("متابعة", "Continue"), fontWeight = FontWeight.Bold) } } } }
+@Composable private fun NameSetup(onSave: (String, Float, Float) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+    val parsedWeight = weight.normalizeDigits().replace('٫', '.').replace(',', '.').toFloatOrNull()
+    val parsedHeight = height.normalizeDigits().replace('٫', '.').replace(',', '.').toFloatOrNull()
+    val valid = name.trim().isNotEmpty() && parsedWeight != null && parsedWeight > 0f && parsedHeight != null && parsedHeight > 0f
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(Modifier.fillMaxSize().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Surface(Modifier.size(76.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Person, null, Modifier.padding(20.dp), tint = MaterialTheme.colorScheme.primary) }
+            Spacer(Modifier.height(24.dp))
+            Text(L("أهلاً بيك في Fit Tracker", "Welcome to Fit Tracker"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(10.dp))
+            Text(L("اكتب بياناتك عشان نخصص تجربتك", "Enter your details to personalize your experience"), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(24.dp))
+            OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), label = { Text(L("اسم المستخدم", "Your name")) }, singleLine = true, leadingIcon = { Icon(Icons.Default.Person, null) }, shape = RoundedCornerShape(16.dp))
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(value = weight, onValueChange = { weight = it }, modifier = Modifier.weight(1f), label = { Text(L("الوزن (كجم)", "Weight (kg)")) }, singleLine = true, leadingIcon = { Icon(Icons.Default.MonitorWeight, null) }, shape = RoundedCornerShape(16.dp))
+                OutlinedTextField(value = height, onValueChange = { height = it }, modifier = Modifier.weight(1f), label = { Text(L("الطول (سم)", "Height (cm)")) }, singleLine = true, leadingIcon = { Icon(Icons.Default.Height, null) }, shape = RoundedCornerShape(16.dp))
+            }
+            Spacer(Modifier.height(18.dp))
+            Button(onClick = { onSave(name.trim(), parsedWeight ?: 0f, parsedHeight ?: 0f) }, enabled = valid, modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(18.dp)) { Text(L("متابعة", "Continue"), fontWeight = FontWeight.Bold) }
+        }
+    }
+}
 @Composable private fun Onboarding(done: () -> Unit) { var step by remember { mutableIntStateOf(0) }; val titles = listOf("ابنِ قوتك بذكاء", "سجّل في ثواني", "شاهد التطور") ; val bodies = listOf("كل تمرين، كل تكرار، وكل رقم له مكان في رحلتك.", "واجهة سريعة مصممة عشان تسجل وتكمل تمرينك بدون تشتيت.", "streaks، badges، ورسوم بيانية تخليك شايف تقدمك بوضوح."); val icons = listOf(Icons.Default.FitnessCenter, Icons.Default.Bolt, Icons.Default.TrendingUp); Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { Column(Modifier.fillMaxSize().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) { Spacer(Modifier.height(58.dp)); Row(verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(52.dp), shape = RoundedCornerShape(17.dp), color = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.FitnessCenter, null, Modifier.padding(13.dp), tint = MaterialTheme.colorScheme.onPrimary) }; Spacer(Modifier.width(12.dp)); Text("FIT TRACKER", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) }; Spacer(Modifier.weight(1f)); AnimatedContent(step, label = "onboarding") { current -> Column(horizontalAlignment = Alignment.CenterHorizontally) { Surface(Modifier.size(124.dp), shape = RoundedCornerShape(38.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(icons[current], null, Modifier.padding(32.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.height(30.dp)); Text(titles[current], style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Spacer(Modifier.height(12.dp)); Text(bodies[current], style = MaterialTheme.typography.bodyLarge, textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant) } }; Spacer(Modifier.weight(1f)); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { repeat(3) { Box(Modifier.size(if (it == step) 28.dp else 8.dp, 8.dp).clip(RoundedCornerShape(8.dp)).background(if (it == step) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) } }; Spacer(Modifier.height(24.dp)); Button(onClick = { if (step == 2) done() else step++ }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(18.dp)) { Text(if (step == 2) "ابدأ رحلتك" else "التالي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }; Spacer(Modifier.height(18.dp)) } } }
 
 @Composable private fun AddDialog(onDismiss: () -> Unit, onSave: (String, String, Float, Int) -> Unit) {
@@ -265,8 +297,10 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 }
 
 @Composable private fun Settings(vm: LiftViewModel, onExport: () -> Unit, onRestore: () -> Unit, onAbout: () -> Unit, onReminder: (Boolean) -> Unit) {
-    var editingName by remember { mutableStateOf(false) }
+    var editingProfile by remember { mutableStateOf(false) }
     var name by remember(vm.userName) { mutableStateOf(vm.userName) }
+    var profileWeight by remember(vm.bodyWeight) { mutableStateOf(if (vm.bodyWeight > 0f) "%.1f".format(vm.bodyWeight) else "") }
+    var profileHeight by remember(vm.heightCm) { mutableStateOf(if (vm.heightCm > 0f) "%.1f".format(vm.heightCm) else "") }
     var editingTime by remember { mutableStateOf(false) }
     var hour by remember { mutableStateOf(vm.reminderHour.toString()) }
     var minute by remember { mutableStateOf(vm.reminderMinute.toString().padStart(2, '0')) }
@@ -275,11 +309,25 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
         item {
             Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(L("الحساب", "Account"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                if (editingName) {
-                    OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اسم المستخدم", "Your name")) })
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { vm.updateUserName(name); editingName = false }) { Text(L("حفظ الاسم", "Save name")) }; TextButton(onClick = { name = vm.userName; editingName = false }) { Text(L("إلغاء", "Cancel")) } }
+                if (editingProfile) {
+                    OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اسم المستخدم", "Your name")) }, leadingIcon = { Icon(Icons.Default.Person, null) })
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(value = profileWeight, onValueChange = { profileWeight = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("الوزن (كجم)", "Weight (kg)")) }, leadingIcon = { Icon(Icons.Default.MonitorWeight, null) })
+                        OutlinedTextField(value = profileHeight, onValueChange = { profileHeight = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("الطول (سم)", "Height (cm)")) }, leadingIcon = { Icon(Icons.Default.Height, null) })
+                    }
+                    val parsedWeight = profileWeight.normalizeDigits().replace('٫', '.').replace(',', '.').toFloatOrNull()
+                    val parsedHeight = profileHeight.normalizeDigits().replace('٫', '.').replace(',', '.').toFloatOrNull()
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { vm.updateProfile(name, parsedWeight ?: 0f, parsedHeight ?: 0f); editingProfile = false }, enabled = name.trim().isNotEmpty() && parsedWeight != null && parsedWeight > 0f && parsedHeight != null && parsedHeight > 0f) { Text(L("حفظ البيانات", "Save profile")) }; TextButton(onClick = { name = vm.userName; profileWeight = "%.1f".format(vm.bodyWeight); profileHeight = "%.1f".format(vm.heightCm); editingProfile = false }) { Text(L("إلغاء", "Cancel")) } }
                 } else {
-                    ListItem(headlineContent = { Text(vm.userName.ifBlank { L("لم يتم تحديد الاسم", "Name not set") }) }, supportingContent = { Text(L("اضغط لتغيير اسم المستخدم", "Tap to change your username")) }, leadingContent = { Icon(Icons.Default.Person, null) }, trailingContent = { TextButton(onClick = { editingName = true }) { Text(L("تعديل", "Edit")) } })
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(Modifier.size(44.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Person, null, Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.primary) }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(vm.userName, fontWeight = FontWeight.Bold)
+                            Text("${"%.1f".format(vm.bodyWeight)} kg • ${"%.1f".format(vm.heightCm)} cm", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        TextButton(onClick = { editingProfile = true }) { Text(L("تعديل", "Edit")) }
+                    }
                 }
             } }
         }
