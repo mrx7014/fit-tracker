@@ -1,4 +1,4 @@
-# IronLog 2.1.0
+# Fit Tracker 2.1.0
 
 ## English
 

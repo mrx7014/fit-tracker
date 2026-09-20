@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-android { namespace = "com.ironlog.app"; compileSdk = 35
-    defaultConfig { applicationId = "com.ironlog.app"; minSdk = 26; targetSdk = 35; versionCode = 3; versionName = "2.1.0" }
+android { namespace = "com.fittracker.app"; compileSdk = 35
+    defaultConfig { applicationId = "com.fittracker.app"; minSdk = 26; targetSdk = 35; versionCode = 3; versionName = "2.1.0" }
 }
 
 kotlin { jvmToolchain(21) }

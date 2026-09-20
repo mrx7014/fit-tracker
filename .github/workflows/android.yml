@@ -33,7 +33,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ironlog-debug-apk
+          name: fit-tracker-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'workflow_dispatch' && inputs.publish_release == true

@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.IronLog" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.FitTracker" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/white</item>
