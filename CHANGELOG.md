@@ -1,29 +1,35 @@
-# IronLog 2.0.0
+# IronLog 2.1.0
 
 ## English
 
-### Complete visual redesign
+### Language support
 
-IronLog 2.0.0 introduces a complete modern fitness-dashboard redesign focused on clarity, motivation, and faster workout logging.
+- Added a language selector in Settings with System, English, and Arabic options.
+- English is used automatically when the device language is not Arabic.
+- Arabic uses RTL layout and English uses LTR layout across the app.
+- The selected language is saved and restored on the next launch.
+- Updated navigation labels, Settings, workout entry, backup actions, and core dashboard labels for Arabic and English.
+- GitHub Actions now uses a stable Ubuntu runner and explicit Android SDK packages.
 
-The new experience includes a bold IronLog identity, a strength-focused hero dashboard, a dedicated streak spotlight, clearer metric cards, improved training-volume progress, redesigned workout rows, stronger spacing and hierarchy, refined rounded surfaces, a cleaner bottom navigation, a better floating add action, and a more consistent dark/light visual system.
-
-All existing features remain available: workout logging, progress summaries, streak tracking, advanced charts, achievements, reminders, JSON backup and restore, manual themes, Dynamic Color, custom accents, onboarding, About, and GitHub OTA updates.
+The complete visual redesign from 2.0.0 remains included: the fitness dashboard, streak spotlight, metric cards, training-volume progress, redesigned workout rows, onboarding, themes, achievements, reminders, JSON backup and restore, and GitHub OTA updates.
 
 ### Release
 
-This is the official **2.0.0** release. The APK is built and published through GitHub Actions and GitHub Releases.
+This is the official **2.1.0** release, built and published through GitHub Actions and GitHub Releases.
 
 ## العربية
 
-### إعادة تصميم كاملة للواجهة
+### دعم اللغتين
 
-يقدم IronLog 2.0.0 إعادة تصميم كاملة وعصرية مستوحاة من تطبيقات اللياقة الحديثة، مع التركيز على الوضوح والتحفيز وسرعة تسجيل التمرين.
+- تمت إضافة اختيار اللغة من الإعدادات مع خيارات تلقائي، English، والعربية.
+- يتم اختيار الإنجليزية تلقائيًا عندما تكون لغة الجهاز غير العربية.
+- تستخدم العربية اتجاه RTL، بينما تستخدم الإنجليزية اتجاه LTR داخل التطبيق.
+- يتم حفظ اللغة المختارة واستعادتها عند فتح التطبيق مرة أخرى.
+- تمت ترجمة عناوين التنقل والإعدادات وتسجيل التمرين والنسخ الاحتياطي والعناصر الأساسية في لوحة التحكم إلى العربية والإنجليزية.
+- تم تثبيت بيئة GitHub Actions وتحديد حزم Android SDK المطلوبة بشكل صريح.
 
-تشمل النسخة هوية بصرية أقوى لـ IronLog، ولوحة رئيسية تركّز على القوة، وإبرازًا واضحًا للـ streak، وبطاقات أرقام محسنة، ومتابعة أوضح لحجم التدريب، وبطاقات جديدة للتمارين، ومساحات وتسلسل بصري أفضل، وحواف وعناصر أكثر اتساقًا، وشريط تنقل أنظف، وزر إضافة عائم أفضل، ونظامًا بصريًا متناسقًا للوضعين الفاتح والداكن.
-
-تظل كل المميزات السابقة متاحة: تسجيل التمارين، ملخصات التقدم، متابعة الـ streak، الرسوم البيانية، الإنجازات، التذكيرات، النسخ الاحتياطي والاسترجاع JSON، الثيمات اليدوية، Dynamic Color، الألوان المخصصة، onboarding، صفحة عن التطبيق، وتحديثات OTA من GitHub.
+تظل إعادة التصميم الكاملة من الإصدار 2.0.0 متاحة، وتشمل لوحة اللياقة، إبراز الـ streak، بطاقات الإحصائيات، متابعة حجم التدريب، بطاقات التمارين الجديدة، شاشة التعريف، الثيمات، الإنجازات، التذكيرات، النسخ الاحتياطي والاسترجاع JSON، وتحديثات OTA من GitHub.
 
 ### الإصدار
 
-هذا هو الإصدار الرسمي **2.0.0**. تم بناء APK ونشره من خلال GitHub Actions وGitHub Releases.
+هذا هو الإصدار الرسمي **2.1.0**، وتم بناؤه ونشره من خلال GitHub Actions وGitHub Releases.
