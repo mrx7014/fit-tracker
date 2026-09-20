@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
@@ -308,7 +309,73 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
-@Composable private fun ScheduleScreen(vm: LiftViewModel) { val dayValues = listOf(Calendar.SUNDAY, Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY); val dayLabels = listOf(L("الأحد", "Sun"), L("الاثنين", "Mon"), L("الثلاثاء", "Tue"), L("الأربعاء", "Wed"), L("الخميس", "Thu"), L("الجمعة", "Fri"), L("السبت", "Sat")); var selectedDay by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) }; var showAdd by remember { mutableStateOf(false) }; val todayPlan = vm.plan.filter { it.day == selectedDay }; LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) { item { Text(L("جدول التمارين", "Workout plan"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black); Text(L("خطط تمرينك الأسبوعية في مكان واحد", "Plan your weekly workouts in one place"), color = MaterialTheme.colorScheme.onSurfaceVariant) }; item { Card(shape = RoundedCornerShape(24.dp)) { Column(Modifier.padding(14.dp)) { Text(L("اختار اليوم", "Choose a day"), fontWeight = FontWeight.Bold); Spacer(Modifier.height(10.dp)); Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { dayValues.forEachIndexed { index, day -> FilterChip(selected = selectedDay == day, onClick = { selectedDay = day }, label = { Text(dayLabels[index]) }) } } } } }; item { Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Icon(Icons.Default.Add, null); Spacer(Modifier.width(8.dp)); Text(L("إضافة تمرين للجدول", "Add workout to plan")) } }; item { Text(dayLabels[dayValues.indexOf(selectedDay)], style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }; if (todayPlan.isEmpty()) { item { Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) { Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.EventNote, null, Modifier.size(42.dp), tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(8.dp)); Text(L("مفيش تمارين في اليوم ده", "No workouts planned for this day"), fontWeight = FontWeight.Bold); Text(L("أضف أول تمرين لجدولك", "Add the first workout to your plan"), color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } else { items(todayPlan, key = { it.id }) { planItem -> Card(shape = RoundedCornerShape(20.dp)) { ListItem(headlineContent = { Text(planItem.exercise, fontWeight = FontWeight.Bold) }, supportingContent = { Text("${planItem.sets} ${L("مجموعات", "sets")} × ${planItem.reps} ${L("عدّات", "reps")}") }, leadingContent = { Icon(Icons.Default.FitnessCenter, null, tint = MaterialTheme.colorScheme.primary) }, trailingContent = { IconButton(onClick = { vm.removePlan(planItem.id) }) { Icon(Icons.Default.DeleteOutline, L("حذف", "Delete"), tint = MaterialTheme.colorScheme.error) } }) } } } }; item { Text(L("الجدول محفوظ على جهازك ويمكن تعديله في أي وقت.", "Your plan is saved on this device and can be edited anytime."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } }; if (showAdd) PlanDialog(selectedDay, { showAdd = false }) { exercise, sets, reps -> vm.addPlan(selectedDay, exercise, sets, reps); showAdd = false } }
+@Composable private fun ScheduleScreen(vm: LiftViewModel) {
+    val dayValues = listOf(Calendar.SUNDAY, Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY)
+    val dayLabels = listOf(L("الأحد", "Sun"), L("الاثنين", "Mon"), L("الثلاثاء", "Tue"), L("الأربعاء", "Wed"), L("الخميس", "Thu"), L("الجمعة", "Fri"), L("السبت", "Sat"))
+    var selectedDay by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) }
+    var showAdd by remember { mutableStateOf(false) }
+    val todayPlan = vm.plan.filter { it.day == selectedDay }
+    LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            Text(L("جدول التمارين", "Workout plan"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Text(L("خطط تمرينك الأسبوعية في مكان واحد", "Plan your weekly workouts in one place"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item {
+            Card(shape = RoundedCornerShape(24.dp)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(L("اختار اليوم", "Choose a day"), fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        dayValues.forEachIndexed { index, day ->
+                            FilterChip(selected = selectedDay == day, onClick = { selectedDay = day }, label = { Text(dayLabels[index]) })
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(8.dp))
+                Text(L("إضافة تمرين للجدول", "Add workout to plan"))
+            }
+        }
+        item { Text(dayLabels[dayValues.indexOf(selectedDay)], style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+        if (todayPlan.isEmpty()) {
+            item {
+                Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.EventNote, null, Modifier.size(42.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Text(L("مفيش تمارين في اليوم ده", "No workouts planned for this day"), fontWeight = FontWeight.Bold)
+                        Text(L("أضف أول تمرين لجدولك", "Add the first workout to your plan"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        } else {
+            items(todayPlan, key = { it.id }) { planItem ->
+                Card(shape = RoundedCornerShape(20.dp)) {
+                    ListItem(
+                        headlineContent = { Text(planItem.exercise, fontWeight = FontWeight.Bold) },
+                        supportingContent = { Text("${planItem.sets} ${L("مجموعات", "sets")} × ${planItem.reps} ${L("عدّات", "reps")}") },
+                        leadingContent = { Icon(Icons.Default.FitnessCenter, null, tint = MaterialTheme.colorScheme.primary) },
+                        trailingContent = { IconButton(onClick = { vm.removePlan(planItem.id) }) { Icon(Icons.Default.DeleteOutline, L("حذف", "Delete"), tint = MaterialTheme.colorScheme.error) } }
+                    )
+                }
+            }
+        }
+        item {
+            Text(L("الجدول محفوظ على جهازك ويمكن تعديله في أي وقت.", "Your plan is saved on this device and can be edited anytime."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    if (showAdd) {
+        PlanDialog(selectedDay, onDismiss = { showAdd = false }) { exercise, sets, reps ->
+            vm.addPlan(selectedDay, exercise, sets, reps)
+            showAdd = false
+        }
+    }
+}
+
 @Composable private fun PlanDialog(day: Int, onDismiss: () -> Unit, onSave: (String, Int, Int) -> Unit) { var exercise by remember { mutableStateOf("") }; var sets by remember { mutableStateOf("3") }; var reps by remember { mutableStateOf("10") }; val parsedSets = sets.normalizeDigits().toIntOrNull(); val parsedReps = reps.normalizeDigits().toIntOrNull(); AlertDialog(onDismissRequest = onDismiss, title = { Text(L("إضافة تمرين للجدول", "Add workout to plan")) }, text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { OutlinedTextField(value = exercise, onValueChange = { exercise = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اسم التمرين", "Exercise name")) }, leadingIcon = { Icon(Icons.Default.FitnessCenter, null) }); Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { OutlinedTextField(value = sets, onValueChange = { sets = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("المجموعات", "Sets")) }); OutlinedTextField(value = reps, onValueChange = { reps = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("العدّات", "Reps")) }) } } }, confirmButton = { Button(onClick = { onSave(exercise.trim(), parsedSets ?: 3, parsedReps ?: 10) }, enabled = exercise.trim().isNotEmpty() && parsedSets != null && parsedSets > 0 && parsedReps != null && parsedReps > 0) { Text(L("حفظ", "Save")) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(L("إلغاء", "Cancel")) } }) }
 @Composable private fun Summary(vm: LiftViewModel) { var range by remember { mutableIntStateOf(7) }; val scoped = vm.lifts.filter { it.date >= LiftViewModel.fmt.format(Date(System.currentTimeMillis() - (range - 1) * 86400000L)) }; val unitLabel = if (vm.unit == UnitMode.KG) "kg" else "lb"; LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { item { Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) { Column(Modifier.padding(22.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("${vm.userName}،", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .75f), style = MaterialTheme.typography.labelLarge); Text("يلا بينا يا بطل", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) }; Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .16f)) { Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.LocalFireDepartment, null, tint = MaterialTheme.colorScheme.onPrimary); Text("${vm.streak}", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Text("STREAK", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .8f), style = MaterialTheme.typography.labelSmall) } } }; Spacer(Modifier.height(20.dp)); Text("استمرارية صغيرة كل يوم = فرق كبير.", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .82f), style = MaterialTheme.typography.bodyMedium) } } }; item { AdaptiveMetricLayout(first = { MetricTile("${scoped.size}", L("جلسات الفترة", "Period sessions"), Icons.Default.Bolt, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${"%.1f".format(vm.displayWeight(vm.bestWeight))}", L("أفضل وزن $unitLabel", "Best weight $unitLabel"), Icons.Default.TrendingUp, MaterialTheme.colorScheme.tertiaryContainer) }) }; item { AdaptiveMetricLayout(first = { MetricTile("${vm.lifts.size}", L("إجمالي الأوزان", "Total weights"), Icons.Default.FitnessCenter, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${vm.lifts.sumOf { it.reps }}", L("إجمالي العدّات", "Total reps"), Icons.Default.Repeat, MaterialTheme.colorScheme.tertiaryContainer) }, third = { MetricTile("${vm.lifts.map { it.exercise.trim().lowercase() }.distinct().size}", L("إجمالي التمرينات", "Total exercises"), Icons.Default.List, MaterialTheme.colorScheme.primaryContainer) }) }; item { Row(verticalAlignment = Alignment.CenterVertically) { Text(L("سجل التمرينات", "Workout history"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Spacer(Modifier.weight(1f)); Text("${vm.lifts.size} تسجيل", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) } }; if (vm.lifts.isEmpty()) { item { EmptyState() } } else { items(vm.lifts, key = { it.id }) { lift -> LiftRow(lift, vm) } } } }
 
