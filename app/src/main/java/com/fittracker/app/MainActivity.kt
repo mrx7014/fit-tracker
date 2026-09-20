@@ -80,6 +80,7 @@ private data class Achievement(val title: String, val description: String, val i
 private enum class UnitMode { KG, LB }
 private enum class ThemeMode { SYSTEM, LIGHT, DARK }
 private enum class AppLanguage { SYSTEM, ENGLISH, ARABIC }
+private enum class AnalyticsPeriod { WEEK, MONTH }
 private const val PREFS = "fittracker"
 private const val LIFTS = "lifts"
 private const val PLAN = "workout_plan"
@@ -87,6 +88,7 @@ private const val ONBOARDING = "onboarding_done"
 private const val USER_NAME = "user_name"
 private const val USER_WEIGHT = "user_weight"
 private const val USER_HEIGHT = "user_height"
+private const val MOTIVATION = "motivation"
 private const val DARK = "dark_mode"
 private const val UNIT = "unit"
 private const val REMINDER = "reminder"
@@ -121,6 +123,7 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     var userName by mutableStateOf(prefs.getString(USER_NAME, "") ?: ""); private set
     var bodyWeight by mutableFloatStateOf(prefs.getFloat(USER_WEIGHT, 0f)); private set
     var heightCm by mutableFloatStateOf(prefs.getFloat(USER_HEIGHT, 0f)); private set
+    var motivation by mutableStateOf(prefs.getString(MOTIVATION, "يلا بينا يا بطل") ?: "يلا بينا يا بطل"); private set
     private fun load() = prefs.getString(LIFTS, "")!!.split("\n").filter { it.isNotBlank() }.mapNotNull { p -> p.split("|").takeIf { it.size == 5 }?.let { runCatching { Lift(it[0].toLong(), it[1], it[2], it[3].toFloat(), it[4].toInt()) }.getOrNull() } }.sortedByDescending { it.id }
     private fun save() { prefs.edit().putString(LIFTS, lifts.joinToString("\n") { "${it.id}|${it.exercise}|${it.date}|${it.weight}|${it.reps}" }).apply() }
     private fun loadPlan() = prefs.getString(PLAN, "")!!.split("\n").filter { it.isNotBlank() }.mapNotNull { p -> p.split("|").takeIf { it.size == 5 }?.let { runCatching { PlanItem(it[0].toLong(), it[1].toInt(), it[2], it[3].toInt(), it[4].toInt()) }.getOrNull() } }.sortedBy { it.day }
@@ -143,6 +146,7 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     fun updateProfile(name: String, weight: Float, height: Float) { val cleaned = name.trim(); if (cleaned.isNotEmpty() && weight > 0f && height > 0f) { userName = cleaned; bodyWeight = weight; heightCm = height; prefs.edit().putString(USER_NAME, cleaned).putFloat(USER_WEIGHT, weight).putFloat(USER_HEIGHT, height).apply() } }
     fun updateBodyWeight(value: Float) { if (value > 0f) { bodyWeight = value; prefs.edit().putFloat(USER_WEIGHT, value).apply() } }
     fun updateHeight(value: Float) { if (value > 0f) { heightCm = value; prefs.edit().putFloat(USER_HEIGHT, value).apply() } }
+    fun updateMotivation(value: String) { val cleaned = value.trim(); if (cleaned.isNotEmpty()) { motivation = cleaned; prefs.edit().putString(MOTIVATION, cleaned).apply() } }
     fun displayWeight(kg: Float) = if (unit == UnitMode.KG) kg else kg * 2.20462f
     val totalVolume get() = lifts.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
     val uniqueDays get() = lifts.map { it.date }.distinct()
@@ -301,6 +305,8 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     var name by remember(vm.userName) { mutableStateOf(vm.userName) }
     var profileWeight by remember(vm.bodyWeight) { mutableStateOf(if (vm.bodyWeight > 0f) "%.1f".format(vm.bodyWeight) else "") }
     var profileHeight by remember(vm.heightCm) { mutableStateOf(if (vm.heightCm > 0f) "%.1f".format(vm.heightCm) else "") }
+    var editingMotivation by remember { mutableStateOf(false) }
+    var motivation by remember(vm.motivation) { mutableStateOf(vm.motivation) }
     var editingTime by remember { mutableStateOf(false) }
     var hour by remember { mutableStateOf(vm.reminderHour.toString()) }
     var minute by remember { mutableStateOf(vm.reminderMinute.toString().padStart(2, '0')) }
@@ -328,6 +334,17 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
                         }
                         TextButton(onClick = { editingProfile = true }) { Text(L("تعديل", "Edit")) }
                     }
+                }
+            } }
+        }
+        item {
+            Card(shape = RoundedCornerShape(22.dp)) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(40.dp), shape = RoundedCornerShape(13.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.FormatQuote, null, Modifier.padding(9.dp), tint = MaterialTheme.colorScheme.primary) }; Spacer(Modifier.width(10.dp)); Text(L("عبارة التحفيز", "Motivational phrase"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+                if (editingMotivation) {
+                    OutlinedTextField(value = motivation, onValueChange = { motivation = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اكتب العبارة التي تحبها", "Your preferred phrase")) })
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { vm.updateMotivation(motivation); editingMotivation = false }) { Text(L("حفظ", "Save")) }; TextButton(onClick = { motivation = vm.motivation; editingMotivation = false }) { Text(L("إلغاء", "Cancel")) } }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) { Text(vm.motivation, Modifier.weight(1f), fontWeight = FontWeight.Bold); TextButton(onClick = { editingMotivation = true }) { Text(L("تعديل", "Edit")) } }
                 }
             } }
         }
@@ -427,7 +444,7 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 }
 
 @Composable private fun PlanDialog(day: Int, onDismiss: () -> Unit, onSave: (String, Int, Int) -> Unit) { var exercise by remember { mutableStateOf("") }; var sets by remember { mutableStateOf("3") }; var reps by remember { mutableStateOf("10") }; val parsedSets = sets.normalizeDigits().toIntOrNull(); val parsedReps = reps.normalizeDigits().toIntOrNull(); AlertDialog(onDismissRequest = onDismiss, title = { Text(L("إضافة تمرين للجدول", "Add workout to plan")) }, text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { OutlinedTextField(value = exercise, onValueChange = { exercise = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L("اسم التمرين", "Exercise name")) }, leadingIcon = { Icon(Icons.Default.FitnessCenter, null) }); Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { OutlinedTextField(value = sets, onValueChange = { sets = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("المجموعات", "Sets")) }); OutlinedTextField(value = reps, onValueChange = { reps = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(L("العدّات", "Reps")) }) } } }, confirmButton = { Button(onClick = { onSave(exercise.trim(), parsedSets ?: 3, parsedReps ?: 10) }, enabled = exercise.trim().isNotEmpty() && parsedSets != null && parsedSets > 0 && parsedReps != null && parsedReps > 0) { Text(L("حفظ", "Save")) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(L("إلغاء", "Cancel")) } }) }
-@Composable private fun Summary(vm: LiftViewModel) { var range by remember { mutableIntStateOf(7) }; val scoped = vm.lifts.filter { it.date >= LiftViewModel.fmt.format(Date(System.currentTimeMillis() - (range - 1) * 86400000L)) }; val unitLabel = if (vm.unit == UnitMode.KG) "kg" else "lb"; LazyColumn(contentPadding = PaddingValues(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 104.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { item { Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) { Column(Modifier.padding(22.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("${vm.userName}،", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .75f), style = MaterialTheme.typography.labelLarge); Text("يلا بينا يا بطل", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) }; Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .16f)) { Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.LocalFireDepartment, null, tint = MaterialTheme.colorScheme.onPrimary); Text("${vm.streak}", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Text("STREAK", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .8f), style = MaterialTheme.typography.labelSmall) } } }; Spacer(Modifier.height(20.dp)); Text("استمرارية صغيرة كل يوم = فرق كبير.", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .82f), style = MaterialTheme.typography.bodyMedium) } } }; item { AdaptiveMetricLayout(first = { MetricTile("${scoped.size}", L("جلسات الفترة", "Period sessions"), Icons.Default.Bolt, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${"%.1f".format(vm.displayWeight(vm.bestWeight))}", L("أفضل وزن $unitLabel", "Best weight $unitLabel"), Icons.Default.TrendingUp, MaterialTheme.colorScheme.tertiaryContainer) }) }; item { AdaptiveMetricLayout(first = { MetricTile("${vm.lifts.size}", L("إجمالي الأوزان", "Total weights"), Icons.Default.FitnessCenter, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${vm.lifts.sumOf { it.reps }}", L("إجمالي العدّات", "Total reps"), Icons.Default.Repeat, MaterialTheme.colorScheme.tertiaryContainer) }, third = { MetricTile("${vm.lifts.map { it.exercise.trim().lowercase() }.distinct().size}", L("إجمالي التمرينات", "Total exercises"), Icons.Default.List, MaterialTheme.colorScheme.primaryContainer) }) }; item { Row(verticalAlignment = Alignment.CenterVertically) { Text(L("سجل التمرينات", "Workout history"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Spacer(Modifier.weight(1f)); Text("${vm.lifts.size} تسجيل", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) } }; if (vm.lifts.isEmpty()) { item { EmptyState() } } else { items(vm.lifts, key = { it.id }) { lift -> LiftRow(lift, vm) } } } }
+@Composable private fun Summary(vm: LiftViewModel) { var range by remember { mutableIntStateOf(7) }; val scoped = vm.lifts.filter { it.date >= LiftViewModel.fmt.format(Date(System.currentTimeMillis() - (range - 1) * 86400000L)) }; val unitLabel = if (vm.unit == UnitMode.KG) "kg" else "lb"; LazyColumn(contentPadding = PaddingValues(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 104.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { item { Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) { Column(Modifier.padding(22.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("${vm.userName}،", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .75f), style = MaterialTheme.typography.labelLarge); Text(vm.motivation, color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) }; Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .16f)) { Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.LocalFireDepartment, null, tint = MaterialTheme.colorScheme.onPrimary); Text("${vm.streak}", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Text("STREAK", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .8f), style = MaterialTheme.typography.labelSmall) } } }; Spacer(Modifier.height(20.dp)); Text("استمرارية صغيرة كل يوم = فرق كبير.", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .82f), style = MaterialTheme.typography.bodyMedium) } } }; item { AdaptiveMetricLayout(first = { MetricTile("${vm.streak}", L("سلسلة التمارين", "Workout streak"), Icons.Default.LocalFireDepartment, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${"%.1f".format(vm.displayWeight(vm.bestWeight))}", L("أفضل وزن $unitLabel", "Best weight $unitLabel"), Icons.Default.TrendingUp, MaterialTheme.colorScheme.tertiaryContainer) }) }; item { AdaptiveMetricLayout(first = { MetricTile("${vm.lifts.size}", L("إجمالي الأوزان", "Total weights"), Icons.Default.FitnessCenter, MaterialTheme.colorScheme.secondaryContainer) }, second = { MetricTile("${vm.lifts.sumOf { it.reps }}", L("إجمالي العدّات", "Total reps"), Icons.Default.Repeat, MaterialTheme.colorScheme.tertiaryContainer) }, third = { MetricTile("${vm.lifts.map { it.exercise.trim().lowercase() }.distinct().size}", L("إجمالي التمرينات", "Total exercises"), Icons.Default.List, MaterialTheme.colorScheme.primaryContainer) }) }; item { Row(verticalAlignment = Alignment.CenterVertically) { Text(L("سجل التمرينات", "Workout history"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Spacer(Modifier.weight(1f)); Text("${vm.lifts.size} تسجيل", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) } }; if (vm.lifts.isEmpty()) { item { EmptyState() } } else { items(vm.lifts, key = { it.id }) { lift -> LiftRow(lift, vm) } } } }
 
 @Composable private fun MetricTile(value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color) { Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = color)) { Column(Modifier.padding(16.dp)) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface); Spacer(Modifier.height(10.dp)); Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
 
@@ -435,7 +452,63 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
 
 @Composable private fun StatCard(modifier: Modifier = Modifier, v: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color) { Card(modifier, colors = CardDefaults.cardColors(containerColor = color), shape = RoundedCornerShape(24.dp)) { Column(Modifier.padding(16.dp)) { Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = .08f)) { Icon(icon, null, Modifier.padding(8.dp)) }; Spacer(Modifier.height(10.dp)); Text(v, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text(label, maxLines = 1, style = MaterialTheme.typography.labelMedium) } } }
 
-@Composable private fun StatsScreen(vm: LiftViewModel) { val points = vm.lifts.take(20); val maxWeight = (points.maxOfOrNull { vm.displayWeight(it.weight) } ?: 1f).coerceAtLeast(1f); val maxReps = (points.maxOfOrNull { it.reps } ?: 1).coerceAtLeast(1); LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { item { Text("إحصائيات متقدمة", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text("الوزن أفقي والعدّات رأسي — كل نقطة تمرين مسجل", color = MaterialTheme.colorScheme.onSurfaceVariant) }; item { Card(shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) { Column(Modifier.padding(18.dp)) { Text("الوزن مقابل العدّات — آخر ${points.size} تسجيل", fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); WeightRepsChart(points, maxWeight, maxReps, vm) } } }; item { AdaptiveMetricLayout(first = { StatCard(Modifier.fillMaxWidth(), "${vm.lifts.distinctBy { it.exercise }.size}", L("تمارين مختلفة", "Exercises"), Icons.Default.FitnessCenter, MaterialTheme.colorScheme.primaryContainer) }, second = { StatCard(Modifier.fillMaxWidth(), "${"%.1f".format(vm.displayWeight(vm.bestWeight))}", L("أعلى وزن", "Best weight"), Icons.Default.TrendingUp, MaterialTheme.colorScheme.tertiaryContainer) }) }; item { Text("أفضل أوزان حسب التمرين", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }; items(vm.lifts.groupBy { it.exercise }.entries.sortedByDescending { it.value.maxOf { lift -> lift.weight } }.take(8)) { (exercise, lifts) -> ListItem(headlineContent = { Text(exercise, fontWeight = FontWeight.Bold) }, supportingContent = { Text("${lifts.size} تسجيلات") }, trailingContent = { Text("${"%.1f".format(vm.displayWeight(lifts.maxOf { it.weight }))} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}", fontWeight = FontWeight.Bold) }) } } }
+@Composable private fun StatsScreen(vm: LiftViewModel) {
+    var period by remember { mutableStateOf(AnalyticsPeriod.WEEK) }
+    val days = if (period == AnalyticsPeriod.WEEK) 7 else 30
+    val cutoff = LiftViewModel.fmt.format(Date(System.currentTimeMillis() - (days - 1) * 86400000L))
+    val periodLifts = vm.lifts.filter { it.date >= cutoff }
+    val maxWeight = (periodLifts.maxOfOrNull { vm.displayWeight(it.weight) } ?: 1f).coerceAtLeast(1f)
+    val maxReps = (periodLifts.maxOfOrNull { it.reps } ?: 1).coerceAtLeast(1)
+    val chartPoints = vm.lifts.take(20)
+    LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item {
+            Text(L("الإحصائيات", "Statistics"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(L("تابع أداءك أسبوعيًا أو شهريًا واكتشف تطورك.", "Track your weekly or monthly performance and discover your progress."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = period == AnalyticsPeriod.WEEK, onClick = { period = AnalyticsPeriod.WEEK }, label = { Text(L("هذا الأسبوع", "This week")), }, leadingIcon = { Icon(Icons.Default.DateRange, null) })
+                FilterChip(selected = period == AnalyticsPeriod.MONTH, onClick = { period = AnalyticsPeriod.MONTH }, label = { Text(L("هذا الشهر", "This month")), }, leadingIcon = { Icon(Icons.Default.CalendarMonth, null) })
+            }
+        }
+        item { PeriodAnalyticsCard(period, periodLifts, vm) }
+        item {
+            Card(shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                Column(Modifier.padding(18.dp)) { Text(L("الوزن مقابل العدّات", "Weight versus reps"), fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); WeightRepsChart(chartPoints, maxWeight, maxReps, vm) }
+            }
+        }
+        item { AdaptiveMetricLayout(first = { StatCard(Modifier.fillMaxWidth(), "${vm.lifts.distinctBy { it.exercise }.size}", L("تمارين مختلفة", "Exercises"), Icons.Default.FitnessCenter, MaterialTheme.colorScheme.primaryContainer) }, second = { StatCard(Modifier.fillMaxWidth(), "${"%.1f".format(vm.displayWeight(vm.bestWeight))}", L("أعلى وزن", "Best weight"), Icons.Default.TrendingUp, MaterialTheme.colorScheme.tertiaryContainer) }) }
+        item { Text(L("أفضل أوزان حسب التمرين", "Best weights by exercise"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+        items(vm.lifts.groupBy { it.exercise }.entries.sortedByDescending { it.value.maxOf { lift -> lift.weight } }.take(8)) { (exercise, lifts) -> ListItem(headlineContent = { Text(exercise, fontWeight = FontWeight.Bold) }, supportingContent = { Text("${lifts.size} ${L("تسجيلات", "logs")}") }, trailingContent = { Text("${"%.1f".format(vm.displayWeight(lifts.maxOf { it.weight }))} ${if (vm.unit == UnitMode.KG) "kg" else "lb"}", fontWeight = FontWeight.Bold) }) }
+    }
+}
+
+@Composable private fun PeriodAnalyticsCard(period: AnalyticsPeriod, lifts: List<Lift>, vm: LiftViewModel) {
+    val title = if (period == AnalyticsPeriod.WEEK) L("ملخص الأسبوع", "Weekly summary") else L("ملخص الشهر", "Monthly summary")
+    val activeDays = lifts.map { it.date }.distinct().size
+    val totalReps = lifts.sumOf { it.reps }
+    val avgWeight = lifts.map { vm.displayWeight(it.weight) }.average().takeIf { !it.isNaN() } ?: 0.0
+    val barCount = if (period == AnalyticsPeriod.WEEK) 7 else 6
+    val bucketCounts = if (period == AnalyticsPeriod.WEEK) {
+        (0 until 7).map { offset ->
+            val date = LiftViewModel.fmt.format(Date(System.currentTimeMillis() - (6 - offset) * 86400000L))
+            lifts.count { it.date == date }
+        }
+    } else {
+        (0 until 6).map { bucket ->
+            lifts.count { (((it.date.substringAfterLast("-").toIntOrNull() ?: 1) - 1) / 5) == bucket }
+        }
+    }
+    val maxCount = (bucketCounts.maxOrNull() ?: 1).coerceAtLeast(1)
+    Card(shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black); Text(L("نتائج مبنية على تسجيلاتك الفعلية", "Based on your actual workout logs"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }; Icon(Icons.Default.Insights, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp)) }
+            AdaptiveMetricLayout(first = { MetricTile("${lifts.size}", L("جلسات", "Sessions"), Icons.Default.Bolt, MaterialTheme.colorScheme.surface) }, second = { MetricTile("$totalReps", L("عدّات", "Reps"), Icons.Default.Repeat, MaterialTheme.colorScheme.surface) }, third = { MetricTile("$activeDays", L("أيام نشطة", "Active days"), Icons.Default.CalendarToday, MaterialTheme.colorScheme.surface) })
+            Text("${"%.1f".format(avgWeight)} ${if (vm.unit == UnitMode.KG) "kg" else "lb"} ${L("متوسط الوزن", "average weight")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth().height(92.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) { repeat(barCount) { index -> val count = bucketCounts.getOrElse(index) { 0 }; Box(Modifier.weight(1f).fillMaxHeight(fraction = (count.toFloat() / maxCount).coerceIn(.08f, 1f)).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primary)) } }
+        }
+    }
+}
 
 @Composable private fun AchievementsScreen(vm: LiftViewModel) { LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) { item { Text(L("الإنجازات", "Achievements"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text(L("كل إنجاز بيحكي خطوة في رحلتك", "Every achievement marks a step in your journey"), color = MaterialTheme.colorScheme.onSurfaceVariant) }; item { Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) { Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.EmojiEvents, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp)); Spacer(Modifier.width(12.dp)); Column { Text("${vm.achievements.count { it.unlocked }} / ${vm.achievements.size}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black); Text(L("إنجازات مفتوحة", "Achievements unlocked"), color = MaterialTheme.colorScheme.onSurfaceVariant) } } } }; items(vm.achievements) { (title, description, icon, unlocked) -> AchievementCard(title, description, icon, unlocked) } } }
 @Composable private fun AchievementCard(title: String, description: String, icon: androidx.compose.ui.graphics.vector.ImageVector, unlocked: Boolean) { Card(colors = CardDefaults.cardColors(containerColor = if (unlocked) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(20.dp)) { Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, Modifier.size(32.dp), tint = if (unlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(title, fontWeight = FontWeight.Bold); Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Text(if (unlocked) "مفتوح" else "مقفل", color = if (unlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, fontWeight = FontWeight.Bold) } } }
