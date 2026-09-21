@@ -1,28 +1,85 @@
+import java.util.Properties
+
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ktlint)
 }
 
-android { namespace = "com.fittracker.app"; compileSdk = 35
-    defaultConfig { applicationId = "com.fittracker.app"; minSdk = 26; targetSdk = 35; versionCode = 30; versionName = "3.0.0" }
+val signingProperties = Properties()
+val signingPropertiesFile = rootProject.file("keystore.properties")
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.inputStream().use(signingProperties::load)
+}
+
+android {
+    namespace = "com.fittracker.app"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.fittracker.app"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 30
+        versionName = "3.0.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (signingPropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(signingProperties["storeFile"] as String)
+                storePassword = signingProperties["storePassword"] as String
+                keyAlias = signingProperties["keyAlias"] as String
+                keyPassword = signingProperties["keyPassword"] as String
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (signingPropertiesFile.exists()) signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    kotlinOptions { jvmTarget = "21" }
+    buildFeatures { compose = true }
+    lint { abortOnError = true; warningsAsErrors = false }
 }
 
 kotlin { jvmToolchain(21) }
 
-android.buildFeatures { compose = true }
-
 dependencies {
-    val bom = platform("androidx.compose:compose-bom:2024.12.01")
-    implementation(bom); androidTestImplementation(bom)
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    testImplementation("junit:junit:4.13.2")
+    val bom = platform(libs.compose.bom)
+    implementation(bom)
+    androidTestImplementation(bom)
+    implementation(libs.core.ktx)
+    implementation(libs.activity.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons)
+    implementation(libs.datastore.preferences)
+    debugImplementation(libs.compose.ui.tooling)
+    testImplementation(libs.junit)
+}
+
+detekt {
+    config.setFrom(files("${rootProject.projectDir}/config/detekt.yml"))
+    buildUponDefaultConfig = true
 }

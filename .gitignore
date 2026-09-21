@@ -8,3 +8,10 @@
 .externalNativeBuild
 .cxx
 app/build
+*.jks
+*.keystore
+keystore.properties
+*.p12
+*.pem
+app/build/outputs/
+app/build/reports/

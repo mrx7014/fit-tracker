@@ -74,8 +74,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
+import org.json.JSONArray
+import org.json.JSONObject
 
-private data class Lift(val id: Long, val exercise: String, val date: String, val weight: Float, val reps: Int)
+internal data class Lift(val id: Long, val exercise: String, val date: String, val weight: Float, val reps: Int)
 private data class PlanItem(val id: Long, val day: Int, val exercise: String, val sets: Int, val reps: Int)
 private data class Achievement(val title: String, val description: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val unlocked: Boolean)
 private enum class UnitMode { KG, LB }
@@ -97,6 +99,7 @@ private const val REMINDER = "reminder"
 private const val REMINDER_HOUR = "reminder_hour"
 private const val REMINDER_MINUTE = "reminder_minute"
 private const val REMINDER_CHANNEL = "fittracker_reminders"
+private const val BACKUP_SCHEMA_VERSION = 1
 private const val THEME = "theme_mode"
 private const val DYNAMIC = "dynamic_color"
 private const val ACCENT = "accent_color"
@@ -106,8 +109,39 @@ private const val APK_FILE = "fittracker-update.apk"
 private const val APP_VERSION = "3.0.0"
 
 private object JsonBackup {
-    fun encode(lifts: List<Lift>): String = "{\"version\":1,\"app\":\"FitTracker\",\"lifts\":[" + lifts.joinToString(",") { "{\"id\":${it.id},\"exercise\":\"${it.exercise.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"date\":\"${it.date}\",\"weight\":${it.weight},\"reps\":${it.reps}}" } + "]}"
-    fun decode(raw: String): List<Lift> = Regex("\\{\\\"id\\\":(\\d+),\\\"exercise\\\":\\\"(.*?)\\\",\\\"date\\\":\\\"(.*?)\\\",\\\"weight\\\":([0-9.]+),\\\"reps\\\":(\\d+)\\}").findAll(raw).map { m -> Lift(m.groupValues[1].toLong(), m.groupValues[2].replace("\\\"", "\""), m.groupValues[3], m.groupValues[4].toFloat(), m.groupValues[5].toInt()) }.toList()
+    fun encode(lifts: List<Lift>): String = JSONObject().apply {
+        put("schemaVersion", BACKUP_SCHEMA_VERSION)
+        put("app", "FitTracker")
+        put("lifts", JSONArray().apply {
+            lifts.forEach { lift -> put(JSONObject().apply { put("id", lift.id); put("exercise", lift.exercise); put("date", lift.date); put("weight", lift.weight); put("reps", lift.reps) }) }
+        })
+    }.toString()
+
+    fun decode(raw: String): List<Lift> {
+        val root = runCatching { JSONObject(raw) }.getOrElse { throw IllegalArgumentException("Invalid JSON backup", it) }
+        require(root.optInt("schemaVersion", -1) == BACKUP_SCHEMA_VERSION) { "Unsupported backup schema" }
+        require(root.optString("app") == "FitTracker") { "Backup belongs to another app" }
+        val items = root.optJSONArray("lifts") ?: throw IllegalArgumentException("Missing lifts array")
+        return buildList {
+            for (index in 0 until items.length()) {
+                val item = items.optJSONObject(index) ?: throw IllegalArgumentException("Invalid lift at index $index")
+                val id = item.optLong("id", -1L)
+                val exercise = item.optString("exercise").trim()
+                val date = item.optString("date").trim()
+                val weight = item.optDouble("weight", -1.0).toFloat()
+                val reps = item.optInt("reps", -1)
+                require(id >= 0 && exercise.isNotEmpty() && date.isNotEmpty() && weight >= 0f && reps > 0) { "Invalid lift at index $index" }
+                add(Lift(id, exercise, date, weight, reps))
+            }
+        }
+    }
+}
+
+internal object StatisticsCalculator {
+    fun totalWeight(lifts: List<Lift>): Float = lifts.sumOf { it.weight.toDouble() }.toFloat()
+    fun totalReps(lifts: List<Lift>): Int = lifts.sumOf { it.reps }
+    fun totalVolume(lifts: List<Lift>): Float = lifts.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
+    fun activeDays(lifts: List<Lift>): Int = lifts.map { it.date }.distinct().size
 }
 
 private class LiftViewModel(private val context: Context) : ViewModel() {
@@ -151,7 +185,7 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
     fun updateHeight(value: Float) { if (value > 0f) { heightCm = value; prefs.edit().putFloat(USER_HEIGHT, value).apply() } }
     fun updateMotivation(value: String) { val cleaned = value.trim(); if (cleaned.isNotEmpty()) { motivation = cleaned; prefs.edit().putString(MOTIVATION, cleaned).apply() } }
     fun displayWeight(kg: Float) = if (unit == UnitMode.KG) kg else kg * 2.20462f
-    val totalVolume get() = lifts.sumOf { (it.weight * it.reps).toDouble() }.toFloat()
+    val totalVolume get() = StatisticsCalculator.totalVolume(lifts)
     val uniqueDays get() = lifts.map { it.date }.distinct()
     val streak get() = run { var n = 0; val cal = Calendar.getInstance(); while (uniqueDays.contains(fmt.format(cal.time))) { n++; cal.add(Calendar.DAY_OF_YEAR, -1) }; n }
     val bestWeight get() = lifts.maxOfOrNull { it.weight } ?: 0f
@@ -166,11 +200,39 @@ private class LiftViewModel(private val context: Context) : ViewModel() {
 }
 
 private object ReminderManager {
-    fun schedule(context: Context, hour: Int, minute: Int) { val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager; manager.createNotificationChannel(NotificationChannel(REMINDER_CHANNEL, "FitTracker reminders", NotificationManager.IMPORTANCE_DEFAULT)); val intent = PendingIntent.getBroadcast(context, 77, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager; val first = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis; alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, first, AlarmManager.INTERVAL_DAY, intent) }
-    fun cancel(context: Context) { val intent = PendingIntent.getBroadcast(context, 77, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(intent) }
+    private const val REQUEST_CODE = 77
+    fun schedule(context: Context, hour: Int, minute: Int) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(NotificationChannel(REMINDER_CHANNEL, context.getString(R.string.reminder_channel_name), NotificationManager.IMPORTANCE_DEFAULT))
+        val intent = PendingIntent.getBroadcast(context, REQUEST_CODE, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val first = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0); if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarm.canScheduleExactAlarms()) alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, first, intent)
+        else alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, first, intent)
+    }
+    fun cancel(context: Context) { val intent = PendingIntent.getBroadcast(context, REQUEST_CODE, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(intent) }
 }
 
-class ReminderReceiver : BroadcastReceiver() { override fun onReceive(context: Context, intent: Intent?) { val notification = android.app.Notification.Builder(context, REMINDER_CHANNEL).setSmallIcon(android.R.drawable.ic_menu_edit).setContentTitle("Fit Tracker").setContentText("حافظ على الاستريك وسجّل تمرينك اليوم").setAutoCancel(true).build(); (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(77, notification) } }
+class ReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val prefs = context.getSharedPreferences(PREFS, 0)
+        val notification = android.app.Notification.Builder(context, REMINDER_CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_menu_edit)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.reminder_notification_text))
+            .setAutoCancel(true)
+            .build()
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(77, notification)
+        if (prefs.getBoolean(REMINDER, false)) ReminderManager.schedule(context, prefs.getInt(REMINDER_HOUR, 20), prefs.getInt(REMINDER_MINUTE, 0))
+    }
+}
+
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val prefs = context.getSharedPreferences(PREFS, 0)
+        if (prefs.getBoolean(REMINDER, false)) ReminderManager.schedule(context, prefs.getInt(REMINDER_HOUR, 20), prefs.getInt(REMINDER_MINUTE, 0))
+    }
+}
 
 private object UpdateManager { fun download(context: Context) { val request = DownloadManager.Request(Uri.parse(APK_URL)).setTitle("Fit Tracker $APP_VERSION").setDescription("جاري تنزيل تحديث Fit Tracker").setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED).setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APK_FILE).setMimeType("application/vnd.android.package-archive"); (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request) }; fun install(context: Context) { val file = java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), APK_FILE); if (!file.exists()) return; val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file); val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION); runCatching { context.startActivity(intent) }.onFailure { if (Build.VERSION.SDK_INT >= 26) context.startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } }
 
@@ -191,7 +253,16 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     var intro by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(ONBOARDING, false)) }
     var guideVisible by remember { mutableStateOf(!context.getSharedPreferences(PREFS, 0).getBoolean(GUIDE_SEEN, false)) }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? -> uri?.let { context.contentResolver.openOutputStream(it)?.use { out -> out.write(JsonBackup.encode(vm.lifts).toByteArray()) } } }
-    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { reader -> vm.restore(JsonBackup.decode(reader.readText())) } } }
+    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            val result = runCatching {
+                context.contentResolver.openInputStream(selectedUri)?.bufferedReader()?.use { reader -> JsonBackup.decode(reader.readText()) }
+                    ?: throw IllegalArgumentException("Unable to read backup")
+            }
+            result.onSuccess { vm.restore(it); android.widget.Toast.makeText(context, context.getString(R.string.backup_import_success), android.widget.Toast.LENGTH_SHORT).show() }
+                .onFailure { android.widget.Toast.makeText(context, context.getString(R.string.backup_import_error), android.widget.Toast.LENGTH_LONG).show() }
+        }
+    }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val langCode = when (vm.language) { AppLanguage.ARABIC -> "ar"; AppLanguage.ENGLISH -> "en"; AppLanguage.SYSTEM -> if (Locale.getDefault().language == "ar") "ar" else "en" }
     CompositionLocalProvider(LocalAppLanguage provides langCode, LocalLayoutDirection provides if (langCode == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr) {
@@ -684,5 +755,5 @@ private fun String.normalizeDigits(): String = map { char -> when (char) { in '\
     }
 }
 
-@Composable private fun UpdateCard() { val uriHandler = LocalUriHandler.current; val releasesUrl = "https://github.com/mrx7014/fit-tracker/releases"; Card(Modifier.fillMaxWidth().clickable { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) { Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(48.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.SystemUpdate, null, Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.onPrimary) }; Spacer(Modifier.width(14.dp)); Column(Modifier.weight(1f)) { Text(L("تحديث", "Update"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Text(stringResource(R.string.update_current_version, APP_VERSION), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(L("افتح صفحة الإصدارات لمعرفة الجديد", "Open releases to see what's new"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Button(onClick = { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(14.dp)) { Icon(Icons.Default.OpenInNew, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("تحديث", "Update")) } } } }
+@Composable private fun UpdateCard() { val uriHandler = LocalUriHandler.current; val releasesUrl = "https://github.com/mrx7014/fit-tracker/releases"; Card(Modifier.fillMaxWidth().clickable { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) { Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) { Surface(Modifier.size(48.dp), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primary) { Icon(Icons.Default.SystemUpdate, null, Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.onPrimary) }; Spacer(Modifier.width(14.dp)); Column(Modifier.weight(1f)) { Text(L("تحديث", "Update"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Text(stringResource(R.string.update_current_version, APP_VERSION), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.update_open_releases), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; Button(onClick = { uriHandler.openUri(releasesUrl) }, shape = RoundedCornerShape(14.dp)) { Icon(Icons.Default.OpenInNew, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("تحديث", "Update")) } } } }
 @Composable private fun FitTrackerTheme(vm: LiftViewModel, content: @Composable () -> Unit) { val systemDark = isSystemInDarkTheme(); val view = LocalView.current; val dark = when (vm.themeMode) { ThemeMode.DARK -> true; ThemeMode.LIGHT -> false; ThemeMode.SYSTEM -> systemDark }; val palettes = listOf(Color(0xFF0B5D46), Color(0xFF6750A4), Color(0xFF9C4146), Color(0xFF006874)); val accent = palettes.getOrElse(vm.accent) { palettes.first() }; val light = lightColorScheme(primary = accent, onPrimary = Color.White, primaryContainer = accent.copy(alpha = .22f), secondaryContainer = Color(0xFFFFD9B8), tertiaryContainer = Color(0xFFD9E2FF), background = Color(0xFFF8FAF6)); val darkScheme = darkColorScheme(primary = accent.copy(alpha = .9f), onPrimary = Color.White, primaryContainer = accent.copy(alpha = .5f), secondaryContainer = Color(0xFF70451D)); val scheme = if (vm.dynamicColors && android.os.Build.VERSION.SDK_INT >= 31) { val ctx = LocalContext.current; if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx) } else if (dark) darkScheme else light; val english = FontFamily(Font(com.fittracker.app.R.font.google_sans_flex)); val arabic = FontFamily(Font(com.fittracker.app.R.font.noto_sans_arabic)); SideEffect { val window = (view.context as? Activity)?.window; if (window != null) { val controller = WindowCompat.getInsetsController(window, view); controller.isAppearanceLightStatusBars = !dark; controller.isAppearanceLightNavigationBars = !dark; window.statusBarColor = scheme.background.toArgb(); window.navigationBarColor = scheme.background.toArgb() } }; MaterialTheme(colorScheme = scheme, typography = Typography().run { copy(bodyLarge = bodyLarge.copy(fontFamily = arabic), bodyMedium = bodyMedium.copy(fontFamily = arabic), titleLarge = titleLarge.copy(fontFamily = english), headlineSmall = headlineSmall.copy(fontFamily = english), headlineMedium = headlineMedium.copy(fontFamily = english)) }, content = content) }

@@ -1,0 +1,3 @@
+Fit Tracker is a focused workout companion for recording exercises, organizing a weekly plan, and understanding progress over time. Enter exercise name, date, weight, and reps in seconds. Review weekly or monthly analytics, inspect the weight-versus-reps chart, share a summary, and keep your data under your control with local JSON backup and restore.
+
+The app also includes achievements, a customizable motivational phrase, Arabic and English digit support, dark mode, an interactive guide, and a configurable daily reminder.

@@ -1,0 +1,25 @@
+build:
+  maxIssues: 0
+
+complexity:
+  LongMethod:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+  TooManyFunctions:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    active: false
+  WildcardImport:
+    active: false
+  UnusedPrivateMember:
+    active: false
+
+formatting:
+  active: false

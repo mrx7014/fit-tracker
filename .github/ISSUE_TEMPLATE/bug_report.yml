@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible problem in Fit Tracker
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and the expected behavior.
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true

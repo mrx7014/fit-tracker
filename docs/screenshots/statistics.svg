@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+<rect width="1080" height="1920" fill="#0b1117"/>
+<text x="68" y="96" fill="#ff9f1c" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="800" text-anchor="start">FIT TRACKER</text>
+<text x="68" y="136" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="46px" font-weight="800" text-anchor="start">الإحصائيات</text>
+<text x="68" y="178" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="24px" font-weight="400" text-anchor="start">Weekly and monthly progress at a glance.</text>
+<rect x="52" y="230" width="976" height="110" rx="28" fill="#141d26" stroke="none"/>
+<text x="110" y="298" fill="#ff9f1c" font-family="DejaVu Sans, sans-serif" font-size="26px" font-weight="700" text-anchor="start">هذا الأسبوع</text>
+<text x="490" y="298" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="26px" font-weight="600" text-anchor="start">هذا الشهر</text>
+<rect x="64" y="374" width="952" height="410" rx="30" fill="#273545" stroke="none"/>
+<text x="96" y="432" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="800" text-anchor="start">ملخص الأسبوع</text>
+<text x="96" y="470" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="21px" font-weight="400" text-anchor="start">نتائج مبنية على تسجيلاتك الفعلية</text>
+<rect x="112" y="520" width="230" height="130" rx="22" fill="#1b2732" stroke="none"/>
+<text x="136" y="570" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="42px" font-weight="800" text-anchor="start">8</text>
+<text x="136" y="616" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="20px" font-weight="400" text-anchor="start">جلسات</text>
+<rect x="405" y="520" width="230" height="130" rx="22" fill="#1b2732" stroke="none"/>
+<text x="429" y="570" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="42px" font-weight="800" text-anchor="start">126</text>
+<text x="429" y="616" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="20px" font-weight="400" text-anchor="start">عدّات</text>
+<rect x="698" y="520" width="230" height="130" rx="22" fill="#1b2732" stroke="none"/>
+<text x="722" y="570" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="42px" font-weight="800" text-anchor="start">5</text>
+<text x="722" y="616" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="20px" font-weight="400" text-anchor="start">أيام نشطة</text>
+<text x="96" y="710" fill="#ffbf45" font-family="DejaVu Sans, sans-serif" font-size="24px" font-weight="700" text-anchor="start">72.5 kg متوسط الوزن</text>
+<rect x="118" y="1028" width="58" height="42" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="147" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">س</text>
+<rect x="236" y="1000" width="58" height="70" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="265" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">ح</text>
+<rect x="354" y="1012" width="58" height="58" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="383" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">ن</text>
+<rect x="472" y="978" width="58" height="92" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="501" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">ث</text>
+<rect x="590" y="1034" width="58" height="36" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="619" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">ر</text>
+<rect x="708" y="992" width="58" height="78" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="737" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">خ</text>
+<rect x="826" y="1008" width="58" height="62" rx="12" fill="#ff9f1c" stroke="none"/>
+<text x="855" y="1122" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">ج</text>
+<text x="64" y="1230" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="800" text-anchor="start">الوزن مقابل العدّات</text>
+<rect x="52" y="1280" width="976" height="350" rx="28" fill="#141d26" stroke="none"/>
+<line x1="128" y1="1535" x2="952" y2="1535" stroke="#9eacba" stroke-width="2"/>
+<line x1="128" y1="1335" x2="128" y2="1535" stroke="#9eacba" stroke-width="2"/>
+<circle cx="260" cy="1460" r="12" fill="#ff9f1c"/>
+<text x="260" y="1438" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="16px" font-weight="600" text-anchor="middle">Bench</text>
+<circle cx="420" cy="1405" r="12" fill="#ff9f1c"/>
+<text x="420" y="1383" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="16px" font-weight="600" text-anchor="middle">Squat</text>
+<circle cx="600" cy="1435" r="12" fill="#ff9f1c"/>
+<text x="600" y="1413" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="16px" font-weight="600" text-anchor="middle">Pull</text>
+<circle cx="780" cy="1365" r="12" fill="#ff9f1c"/>
+<text x="780" y="1343" fill="#f6f8fb" font-family="DejaVu Sans, sans-serif" font-size="16px" font-weight="600" text-anchor="middle">Row</text>
+<text x="560" y="1585" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="20px" font-weight="600" text-anchor="middle">الوزن</text>
+<text x="86" y="1435" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="20px" font-weight="600" text-anchor="middle">العدّات</text>
+<rect x="52" y="1660" width="976" height="70" rx="18" fill="#1b2732" stroke="none"/>
+<text x="540" y="1705" fill="#ff9f1c" font-family="DejaVu Sans, sans-serif" font-size="24px" font-weight="700" text-anchor="middle">مشاركة إحصائيات الفترة</text>
+<rect x="0" y="1818" width="1080" height="102" fill="#111a22"/>
+<text x="130" y="1857" fill="#ff9f1c" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="700" text-anchor="middle">⌂</text>
+<text x="130" y="1888" fill="#ff9f1c" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">الرئيسية</text>
+<text x="350" y="1857" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="700" text-anchor="middle">▦</text>
+<text x="350" y="1888" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">الجدول</text>
+<text x="570" y="1857" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="700" text-anchor="middle">↗</text>
+<text x="570" y="1888" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">الإحصائيات</text>
+<text x="790" y="1857" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="700" text-anchor="middle">★</text>
+<text x="790" y="1888" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">الإنجازات</text>
+<text x="950" y="1857" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="34px" font-weight="700" text-anchor="middle">⚙</text>
+<text x="950" y="1888" fill="#9eacba" font-family="DejaVu Sans, sans-serif" font-size="18px" font-weight="600" text-anchor="middle">الإعدادات</text>
+</svg>

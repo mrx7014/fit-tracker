@@ -1,0 +1,45 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, test, and assemble debug
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - name: Run lint
+        run: ./gradlew lintDebug
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+      - name: Run Detekt
+        run: ./gradlew detekt
+      - name: Run Ktlint
+        run: ./gradlew ktlintCheck
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore

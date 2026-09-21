@@ -31,4 +31,8 @@
     <string name="settings_appearance">المظهر</string>
     <string name="settings_language">اللغة</string>
     <string name="settings_backup">النسخ الاحتياطي والاسترجاع</string>
+    <string name="reminder_channel_name">تذكيرات Fit Tracker</string>
+    <string name="reminder_notification_text">حافظ على الاستريك وسجّل تمرينك اليوم</string>
+    <string name="backup_import_success">تم استيراد النسخة الاحتياطية بنجاح</string>
+    <string name="backup_import_error">النسخة الاحتياطية تالفة أو غير صالحة أو من إصدار غير متوافق</string>
 </resources>
