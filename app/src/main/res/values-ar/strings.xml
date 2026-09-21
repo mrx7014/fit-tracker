@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fit Tracker</string>
+    <string name="app_version_format">الإصدار %1$s</string>
+    <string name="application_id_label">معرّف التطبيق: %1$s</string>
+    <string name="developer_name">MRX7014</string>
+    <string name="github_repository">https://github.com/mrx7014/fit-tracker</string>
+    <string name="github_releases">https://github.com/mrx7014/fit-tracker/releases</string>
+    <string name="github_latest_apk">https://github.com/mrx7014/fit-tracker/releases/latest/download/app-debug.apk</string>
+    <string name="update_title">تحديث</string>
+    <string name="update_current_version">الإصدار الحالي %1$s</string>
+    <string name="update_open_releases">افتح صفحة الإصدارات لمعرفة الجديد</string>
+    <string name="update_button">تحديث</string>
+    <string name="about_title">عن التطبيق</string>
+    <string name="about_app_information">معلومات التطبيق</string>
+    <string name="about_open_source">مفتوح المصدر على GitHub</string>
+    <string name="about_developer">حساب المطور</string>
+    <string name="about_repository">المستودع</string>
+    <string name="about_release_page">صفحة الإصدارات</string>
+    <string name="about_kotlin_stack">Kotlin • Jetpack Compose • Material 3</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_schedule">الجدول</string>
+    <string name="nav_stats">الإحصائيات</string>
+    <string name="nav_achievements">الإنجازات</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="action_add_workout">إضافة تمرين</string>
+    <string name="action_share_statistics">مشاركة إحصائيات الفترة</string>
+    <string name="action_learn_app">تعلّم التطبيق</string>
+    <string name="settings_daily_reminder">التذكير اليومي</string>
+    <string name="settings_profile">الملف الشخصي</string>
+    <string name="settings_appearance">المظهر</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_backup">النسخ الاحتياطي والاسترجاع</string>
+</resources>
