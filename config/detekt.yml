@@ -20,6 +20,3 @@ style:
     active: false
   UnusedPrivateMember:
     active: false
-
-formatting:
-  active: false
