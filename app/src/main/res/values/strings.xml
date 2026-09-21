@@ -32,7 +32,7 @@
     <string name="settings_language">Language</string>
     <string name="settings_backup">Backup and restore</string>
     <string name="reminder_channel_name">Fit Tracker reminders</string>
-    <string name="reminder_notification_text">Keep your streak going and log today&apos;s workout</string>
+    <string name="reminder_notification_text">Keep your streak going and log your workout today</string>
     <string name="backup_import_success">Backup imported successfully</string>
     <string name="backup_import_error">This backup is invalid, corrupted, or from an incompatible version</string>
 </resources>
