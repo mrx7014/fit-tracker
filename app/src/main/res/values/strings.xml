@@ -9,7 +9,7 @@
     <string name="github_latest_apk">https://github.com/mrx7014/fit-tracker/releases/latest/download/app-debug.apk</string>
     <string name="update_title">Update</string>
     <string name="update_current_version">Current version %1$s</string>
-    <string name="update_open_releases">Open releases to see what's new</string>
+    <string name="update_open_releases">Open releases to see what&apos;s new</string>
     <string name="update_button">Update</string>
     <string name="about_title">About</string>
     <string name="about_app_information">App information</string>
