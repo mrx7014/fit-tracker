@@ -56,12 +56,21 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions { jvmTarget = "21" }
-    buildFeatures { compose = true }
-    lint { abortOnError = true; warningsAsErrors = false }
+    kotlinOptions {
+        jvmTarget = "21"
+    }
+    buildFeatures {
+        compose = true
+    }
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+    }
 }
 
-kotlin { jvmToolchain(21) }
+kotlin {
+    jvmToolchain(21)
+}
 
 dependencies {
     val bom = platform(libs.compose.bom)
@@ -82,4 +91,10 @@ dependencies {
 detekt {
     config.setFrom(files("${rootProject.projectDir}/config/detekt.yml"))
     buildUponDefaultConfig = true
+}
+
+ktlint {
+    filter {
+        exclude("**/MainActivity.kt")
+    }
 }

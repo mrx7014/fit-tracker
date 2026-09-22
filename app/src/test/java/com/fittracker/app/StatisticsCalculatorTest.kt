@@ -4,11 +4,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class StatisticsCalculatorTest {
-    private val lifts = listOf(
-        Lift(1, "Squat", "2026-09-20", 100f, 5),
-        Lift(2, "Bench press", "2026-09-20", 60f, 8),
-        Lift(3, "Squat", "2026-09-21", 105f, 3),
-    )
+    private val lifts =
+        listOf(
+            Lift(1, "Squat", "2026-09-20", 100f, 5),
+            Lift(2, "Bench press", "2026-09-20", 60f, 8),
+            Lift(3, "Squat", "2026-09-21", 105f, 3),
+        )
 
     @Test
     fun totals_are_calculated_from_all_lifts() {
