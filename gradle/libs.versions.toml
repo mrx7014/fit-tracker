@@ -7,7 +7,7 @@ activityCompose = "1.10.0"
 lifecycle = "2.8.7"
 dataStore = "1.1.1"
 junit = "4.13.2"
-detekt = "1.23.7"
+detekt = "1.23.8"
 ktlint = "12.1.2"
 
 [plugins]
