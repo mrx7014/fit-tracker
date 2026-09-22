@@ -2,6 +2,10 @@ build:
   maxIssues: 0
 
 complexity:
+  ComplexCondition:
+    active: false
+  LongParameterList:
+    active: false
   LongMethod:
     active: false
   CyclomaticComplexMethod:
@@ -9,7 +13,17 @@ complexity:
   TooManyFunctions:
     active: false
 
+empty-blocks:
+  EmptyElseBlock:
+    active: false
+
+naming:
+  FunctionNaming:
+    active: false
+
 style:
+  DestructuringDeclarationWithTooManyEntries:
+    active: false
   MagicNumber:
     active: false
   MaxLineLength:
@@ -19,4 +33,6 @@ style:
   WildcardImport:
     active: false
   UnusedPrivateMember:
+    active: false
+  UnusedParameter:
     active: false

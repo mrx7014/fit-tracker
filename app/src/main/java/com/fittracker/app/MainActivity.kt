@@ -118,23 +118,24 @@ private object JsonBackup {
     }.toString()
 
     fun decode(raw: String): List<Lift> {
-        val root = runCatching { JSONObject(raw) }.getOrElse { throw IllegalArgumentException("Invalid JSON backup", it) }
-        require(root.optInt("schemaVersion", -1) == BACKUP_SCHEMA_VERSION) { "Unsupported backup schema" }
-        require(root.optString("app") == "FitTracker") { "Backup belongs to another app" }
-        val items = root.optJSONArray("lifts") ?: throw IllegalArgumentException("Missing lifts array")
+        val root = runCatching { JSONObject(raw) }.getOrElse { invalidBackup("Invalid JSON backup", it) }
+        if (root.optInt("schemaVersion", -1) != BACKUP_SCHEMA_VERSION) invalidBackup("Unsupported backup schema")
+        if (root.optString("app") != "FitTracker") invalidBackup("Backup belongs to another app")
+        val items = root.optJSONArray("lifts") ?: invalidBackup("Missing lifts array")
         return buildList {
             for (index in 0 until items.length()) {
-                val item = items.optJSONObject(index) ?: throw IllegalArgumentException("Invalid lift at index $index")
+                val item = items.optJSONObject(index) ?: invalidBackup("Invalid lift at index $index")
                 val id = item.optLong("id", -1L)
                 val exercise = item.optString("exercise").trim()
                 val date = item.optString("date").trim()
                 val weight = item.optDouble("weight", -1.0).toFloat()
                 val reps = item.optInt("reps", -1)
-                require(id >= 0 && exercise.isNotEmpty() && date.isNotEmpty() && weight >= 0f && reps > 0) { "Invalid lift at index $index" }
+                if (id < 0 || exercise.isEmpty() || date.isEmpty() || weight < 0f || reps <= 0) invalidBackup("Invalid lift at index $index")
                 add(Lift(id, exercise, date, weight, reps))
             }
         }
     }
+    private fun invalidBackup(message: String, cause: Throwable? = null): Nothing = throw IllegalArgumentException(message, cause)
 }
 
 internal object StatisticsCalculator {
