@@ -87,7 +87,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publish GitHub Release
         if: env.RELEASE_REQUESTED == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.VERSION_NAME }}
           name: Fit Tracker v${{ env.VERSION_NAME }}
