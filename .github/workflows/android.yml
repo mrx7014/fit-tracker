@@ -1,9 +1,6 @@
 name: Release Fit Tracker
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       publish_release:
